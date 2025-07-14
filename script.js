@@ -71,28 +71,22 @@ function calculateFinalTaxes() {
   const taxBreaks = completedStreaks + powerCardsTotal;
 
   let bracketTax = 0;
-  let taxRate = "";
   let message = "";
 
   if (coins <= 6) {
     bracketTax = 0;
-    taxRate = "0%";
     message = "Enjoy tax-free poverty.";
   } else if (coins <= 14) {
     bracketTax = 3;
-    taxRate = "21–43%";
     message = "The poor get crushed.";
   } else if (coins <= 24) {
     bracketTax = 5;
-    taxRate = "21–33%";
     message = "The middle class gets squeezed.";
   } else if (coins <= 39) {
     bracketTax = 8;
-    taxRate = "21–32%";
     message = "The rich barely feel it.";
   } else {
     bracketTax = 10;
-    taxRate = "20–25%";
     message = "Wealth scales, burden doesn’t.";
   }
 
@@ -100,10 +94,17 @@ function calculateFinalTaxes() {
     ? properties * (properties >= 4 ? 2 : 1)
     : 0;
 
-  const preLimitTax = Math.max(0, bracketTax + propertyTax - taxBreaks);
-  const totalTax = Math.min(preLimitTax, coins);
+  const preLimitTax = bracketTax + propertyTax;
+  const totalBreaks = taxBreaks;
+  const postBreakTax = Math.max(0, preLimitTax - totalBreaks);
+  const finalTax = Math.min(postBreakTax, coins);
 
-  document.getElementById("finalTax").innerText = `${totalTax} coin(s)`;
-  document.getElementById("taxRateCategory").innerText = taxRate;
+  const beforeRate = coins > 0 ? Math.round((preLimitTax / coins) * 100) : 0;
+  const afterRate  = coins > 0 ? Math.round((finalTax / coins) * 100) : 0;
+
+  document.getElementById("finalBreaksApplied").innerText = totalBreaks;
+  document.getElementById("finalTax").innerText = `${finalTax} coin(s)`;
+  document.getElementById("taxRateBefore").innerText = `${beforeRate}%`;
+  document.getElementById("taxRateCategory").innerText = `${afterRate}%`;
   document.getElementById("bracketMessage").innerText = message;
 }
