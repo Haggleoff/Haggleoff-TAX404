@@ -22,7 +22,34 @@ body {
   height: auto;
 }
 
-/* Calculator Sections */
+/* Tooltip on Hover */
+#logoHeader a {
+  position: relative;
+  display: inline-block;
+}
+
+#logoHeader a::after {
+  content: "Visit HQ";
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #000000cc;
+  color: #d3ae7e;
+  padding: 5px 8px;
+  font-size: 0.75em;
+  border-radius: 5px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+#logoHeader a:hover::after {
+  opacity: 1;
+}
+
+/* Box Styling */
 #calculatorBox,
 #finalTaxBox {
   border: 5px solid rgba(211, 174, 126, 0.3);
@@ -33,7 +60,7 @@ body {
   background-color: #1f2025;
 }
 
-/* Section Titles */
+/* Headings */
 h2 {
   font-family: 'Lilita One', cursive;
   color: #d3ae7e;
@@ -41,7 +68,7 @@ h2 {
   font-weight: normal;
 }
 
-/* Labels & Inputs */
+/* Labels and Inputs */
 label {
   display: block;
   margin: 15px auto 5px auto;
@@ -91,7 +118,7 @@ button:hover {
   transform: translateY(-2px);
 }
 
-/* Results */
+/* Result Text */
 #summaryBox,
 #finalSummary p {
   margin-top: 15px;
