@@ -7,7 +7,7 @@
 </head>
 <body>
 
-  <!-- Logo Header with Hover Tooltip -->
+  <!-- Logo Header with Tooltip Link -->
   <div id="logoHeader">
     <a href="https://haggleoff.com" target="_blank" rel="noopener noreferrer">
       <img src="HaggleoffTAX404-logo.png" alt="Haggleoff Logo" id="haggleLogo">
@@ -22,21 +22,21 @@
     <pre id="tallyProgress">–</pre>
     <p>Completed Streaks: <span id="streaks">0</span></p>
 
-    <label>Normal Cards Donated:</label>
+    <label>Normal Cards Donated (this round):</label>
     <input type="number" id="normal" min="0" step="1"><br>
 
-    <p>Power Cards Donated: <span id="powers">0</span></p>
-    <label>Power Cards Donated:</label>
+    <p>Total Power Cards Donated: <span id="powers">0</span></p>
+    <label>Power Cards Donated (this round):</label>
     <input type="number" id="power" min="0" step="1"><br>
 
     <label for="interrupted">Took from Charity?</label>
     <input type="checkbox" id="interrupted"><br>
 
-    <button onclick="calculate()">Calculate Tax Breaks</button>
-
     <div id="summaryBox">
-      <p>Tax Breaks Earned: <span id="totalBreaks">0</span></p>
+      <p>Tax Breaks Earned (Until Now): <span id="totalBreaks">0</span></p>
     </div>
+
+    <button onclick="calculate()">Calculate Tax Breaks</button>
   </div>
 
   <!-- Final Tax Calculator -->
@@ -52,8 +52,10 @@
     <button onclick="calculateFinalTaxes()">Calculate Final Taxes</button>
 
     <div id="finalSummary">
+      <p>Tax Breaks Applied: <span id="finalBreaksApplied">–</span></p>
       <p>Taxes Owed: <span id="finalTax">–</span></p>
-      <p>Effective Tax Rate: <span id="taxRateCategory">–</span></p>
+      <p>Effective Tax Rate (before breaks): <span id="taxRateBefore">–</span></p>
+      <p>Effective Tax Rate (after breaks): <span id="taxRateCategory">–</span></p>
       <p><span id="bracketMessage"></span></p>
     </div>
   </div>
