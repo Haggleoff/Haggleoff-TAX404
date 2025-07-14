@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amsterdam+One&family=Lilita+One&family=Roboto:wght@700&display=swap');
 
 body {
   font-family: 'Roboto', sans-serif;
@@ -9,14 +9,20 @@ body {
   text-align: center;
 }
 
-h2 {
-  font-family: 'Lilita One', cursive;
-  font-weight: normal;
-  color: #d3ae7e;
-  margin-bottom: 15px;
+/* Logo Header */
+#logoHeader {
   text-align: center;
+  margin-top: 20px;
+  margin-bottom: 30px;
 }
 
+#haggleLogo {
+  max-width: 180px;
+  width: 50%;
+  height: auto;
+}
+
+/* Calculator Sections */
 #calculatorBox,
 #finalTaxBox {
   border: 5px solid rgba(211, 174, 126, 0.3);
@@ -27,13 +33,15 @@ h2 {
   background-color: #1f2025;
 }
 
-#summaryBox,
-#finalSummary p {
-  margin-top: 15px;
+/* Section Titles */
+h2 {
+  font-family: 'Lilita One', cursive;
   color: #d3ae7e;
-  font-size: 1.1em;
+  margin-bottom: 15px;
+  font-weight: normal;
 }
 
+/* Labels & Inputs */
 label {
   display: block;
   margin: 15px auto 5px auto;
@@ -49,19 +57,46 @@ input[type="number"] {
   width: 200px;
   font-size: 1.1em;
   border-radius: 4px;
-  font-family: 'Roboto', sans-serif;
   font-weight: 700;
-  margin: 0 auto 10px auto;
   display: block;
+  margin: 0 auto 10px auto;
 }
 
 input[type="checkbox"] {
-  width: 10px;
-  height: 50px;
   accent-color: #d3ae7e;
   transform: scale(3);
-  display: block;
   margin: 10px auto 15px auto;
+  display: block;
+  width: 10px;
+  height: 50px;
+}
+
+/* Buttons */
+button {
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #d3ae7e;
+  border: 2px solid #d3ae7e;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  display: block;
+  margin: 20px auto;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+button:hover {
+  background-color: rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Results */
+#summaryBox,
+#finalSummary p {
+  margin-top: 15px;
+  color: #d3ae7e;
+  font-size: 1.1em;
 }
 
 #tallyProgress {
@@ -75,22 +110,14 @@ input[type="checkbox"] {
   letter-spacing: 1px;
 }
 
-button {
-  background-color: rgba(0, 0, 0, 0.3);
-  color: #d3ae7e;
-  border: 2px solid #d3ae7e;
-  cursor: pointer;
-  font-size: 1.2em;
-  padding: 10px 20px;
-  border-radius: 8px;
+/* Footer */
+#siteFooter {
+  text-align: center;
   font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-  margin: 20px auto;
-  display: block;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-button:hover {
-  background-color: rgba(0, 0, 0, 0.45);
-  transform: translateY(-2px);
+  font-size: 0.8em;
+  font-weight: normal;
+  color: #d3ae7e;
+  margin-top: 40px;
+  padding-bottom: 20px;
+  opacity: 0.8;
 }

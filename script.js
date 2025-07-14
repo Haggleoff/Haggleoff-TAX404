@@ -3,35 +3,28 @@ let completedStreaks = 0;
 let powerCardsTotal = 0;
 
 function renderCardProgress(progress) {
-  if (progress === 0) {
-    return "┌─┐\n│0│\n└─┘";
-  }
+  if (progress === 0) return "┌─┐\n│0│\n└─┘";
 
-  let topRow = "", midRow = "", botRow = "";
+  let top = "", mid = "", bot = "";
   for (let i = 1; i <= progress; i++) {
-    topRow += "┌─┐ ";
-    midRow += `│${i}│ `;
-    botRow += "└─┘ ";
+    top += "┌─┐ ";
+    mid += `│${i}│ `;
+    bot += "└─┘ ";
   }
-
-  return `${topRow.trim()}\n${midRow.trim()}\n${botRow.trim()}`;
+  return `${top.trim()}\n${mid.trim()}\n${bot.trim()}`;
 }
 
 function calculate() {
-  const normalInput = document.getElementById("normal");
-  const powerInput = document.getElementById("power");
+  const normal = Number(document.getElementById("normal").value);
+  const power = Number(document.getElementById("power").value);
   const interrupted = document.getElementById("interrupted").checked;
 
-  const normal = Number(normalInput.value);
-  const power = Number(powerInput.value);
-
   if (!Number.isInteger(normal)) {
-    alert("Normal Cards must be a whole number. Please re-enter.");
+    alert("Normal Cards must be a whole number.");
     return;
   }
-
   if (!Number.isInteger(power)) {
-    alert("Power Cards must be a whole number. Please re-enter.");
+    alert("Power Cards must be a whole number.");
     return;
   }
 
@@ -41,11 +34,10 @@ function calculate() {
     normalProgress += normal;
     const newStreaks = Math.floor(normalProgress / 5);
     completedStreaks += newStreaks;
-    normalProgress = normalProgress % 5;
+    normalProgress %= 5;
   }
 
   powerCardsTotal += power;
-
   const totalBreaks = completedStreaks + powerCardsTotal;
 
   document.getElementById("streaks").innerText = completedStreaks;
@@ -53,31 +45,27 @@ function calculate() {
   document.getElementById("totalBreaks").innerText = totalBreaks;
   document.getElementById("tallyProgress").innerText = renderCardProgress(normalProgress);
 
-  normalInput.value = "";
-  powerInput.value = "";
+  document.getElementById("normal").value = "";
+  document.getElementById("power").value = "";
   document.getElementById("interrupted").checked = false;
 }
 
 function calculateFinalTaxes() {
-  const coinsInput = document.getElementById("coinsEarned");
-  const propertiesInput = document.getElementById("propertiesOwned");
-
-  const coins = Number(coinsInput.value);
-  let properties = Number(propertiesInput.value);
+  const coins = Number(document.getElementById("coinsEarned").value);
+  let properties = Number(document.getElementById("propertiesOwned").value);
 
   if (!Number.isInteger(coins)) {
-    alert("Haggleoffs Earned must be a whole number. Please re-enter.");
+    alert("Coins Earned must be a whole number.");
     return;
   }
-
   if (!Number.isInteger(properties)) {
-    alert("Properties Owned must be a whole number. Please re-enter.");
+    alert("Properties Owned must be a whole number.");
     return;
   }
 
   if (properties < 1) {
     properties = 1;
-    propertiesInput.value = "1";
+    document.getElementById("propertiesOwned").value = "1";
   }
 
   const taxBreaks = completedStreaks + powerCardsTotal;
@@ -108,12 +96,12 @@ function calculateFinalTaxes() {
     message = "Wealth scales, burden doesn’t.";
   }
 
-  // Property tax waived if coins ≤ 6
   const propertyTax = (coins > 6)
     ? properties * (properties >= 4 ? 2 : 1)
     : 0;
 
-  const totalTax = Math.max(0, bracketTax + propertyTax - taxBreaks);
+  const preLimitTax = Math.max(0, bracketTax + propertyTax - taxBreaks);
+  const totalTax = Math.min(preLimitTax, coins);
 
   document.getElementById("finalTax").innerText = `${totalTax} coin(s)`;
   document.getElementById("taxRateCategory").innerText = taxRate;
