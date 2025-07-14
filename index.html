@@ -1,13 +1,3 @@
-<!DOCTYPE html>
-<html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>Haggleoff Game Tax Break Calculator</title>
-  <link rel="stylesheet" href="./style.css">
-
-</head>
-<body>
-<!-- partial:index.partial.html -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -17,7 +7,7 @@
 </head>
 <body>
 
-  <!-- Logo Header with Tooltip Link -->
+  <!-- Logo Header with Hover Tooltip -->
   <div id="logoHeader">
     <a href="https://haggleoff.com" target="_blank" rel="noopener noreferrer">
       <img src="HaggleoffTAX404-logo.png" alt="Haggleoff Logo" id="haggleLogo">
@@ -27,12 +17,15 @@
   <!-- Tax Break Calculator -->
   <div id="calculatorBox">
     <h2>Tax Break Calculator</h2>
+
     <p>Streak Progress:</p>
     <pre id="tallyProgress">–</pre>
+    <p>Completed Streaks: <span id="streaks">0</span></p>
 
     <label>Normal Cards Donated:</label>
     <input type="number" id="normal" min="0" step="1"><br>
 
+    <p>Power Cards Donated: <span id="powers">0</span></p>
     <label>Power Cards Donated:</label>
     <input type="number" id="power" min="0" step="1"><br>
 
@@ -42,8 +35,6 @@
     <button onclick="calculate()">Calculate Tax Breaks</button>
 
     <div id="summaryBox">
-      <p>Completed Streaks: <span id="streaks">0</span></p>
-      <p>Power Cards Donated: <span id="powers">0</span></p>
       <p>Tax Breaks Earned: <span id="totalBreaks">0</span></p>
     </div>
   </div>
@@ -76,10 +67,5 @@
   </footer>
 
   <script src="script.js"></script>
-</body>
-</html>
-<!-- partial -->
-  <script  src="./script.js"></script>
-
 </body>
 </html>
