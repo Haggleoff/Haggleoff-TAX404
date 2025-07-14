@@ -17,7 +17,7 @@ function renderCardProgress(progress) {
 function calculate() {
   const normal = Number(document.getElementById("normal").value);
   const power = Number(document.getElementById("power").value);
-  const interrupted = document.getElementById("interrupted").checked;
+  const interruptedChoice = document.querySelector('input[name="interrupted"]:checked');
 
   if (!Number.isInteger(normal)) {
     alert("Normal Cards must be a whole number.");
@@ -27,6 +27,12 @@ function calculate() {
     alert("Power Cards must be a whole number.");
     return;
   }
+  if (!interruptedChoice) {
+    alert("Please select whether you took from charity (this round).");
+    return;
+  }
+
+  const interrupted = interruptedChoice.value === "yes";
 
   if (interrupted) {
     normalProgress = 0;
@@ -47,7 +53,7 @@ function calculate() {
 
   document.getElementById("normal").value = "";
   document.getElementById("power").value = "";
-  document.getElementById("interrupted").checked = false;
+  document.querySelectorAll('input[name="interrupted"]').forEach(el => el.checked = false);
 }
 
 function calculateFinalTaxes() {
@@ -95,14 +101,13 @@ function calculateFinalTaxes() {
     : 0;
 
   const preLimitTax = bracketTax + propertyTax;
-  const totalBreaks = taxBreaks;
-  const postBreakTax = Math.max(0, preLimitTax - totalBreaks);
+  const postBreakTax = Math.max(0, preLimitTax - taxBreaks);
   const finalTax = Math.min(postBreakTax, coins);
 
   const beforeRate = coins > 0 ? Math.round((preLimitTax / coins) * 100) : 0;
   const afterRate  = coins > 0 ? Math.round((finalTax / coins) * 100) : 0;
 
-  document.getElementById("finalBreaksApplied").innerText = totalBreaks;
+  document.getElementById("finalBreaksApplied").innerText = taxBreaks;
   document.getElementById("finalTax").innerText = `${finalTax} coin(s)`;
   document.getElementById("taxRateBefore").innerText = `${beforeRate}%`;
   document.getElementById("taxRateCategory").innerText = `${afterRate}%`;
