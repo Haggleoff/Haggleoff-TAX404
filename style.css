@@ -17,8 +17,8 @@ body {
 }
 
 #haggleLogo {
-  max-width: 250px;
-  width: 300%;
+  max-width: 120px;
+  width: 30%;
   height: auto;
 }
 
@@ -49,7 +49,7 @@ body {
   opacity: 1;
 }
 
-/* Box Styling */
+/* Calculator Boxes */
 #calculatorBox,
 #finalTaxBox {
   border: 5px solid rgba(211, 174, 126, 0.3);
@@ -118,14 +118,7 @@ button:hover {
   transform: translateY(-2px);
 }
 
-/* Result Text */
-#summaryBox,
-#finalSummary p {
-  margin-top: 15px;
-  color: #d3ae7e;
-  font-size: 1.1em;
-}
-
+/* Streak Tracker */
 #tallyProgress {
   color: #d3ae7e;
   font-weight: 700;
@@ -135,6 +128,33 @@ button:hover {
   text-align: center;
   font-family: monospace;
   letter-spacing: 1px;
+}
+
+/* Summary Info */
+#summaryBox,
+#finalSummary p {
+  margin-top: 15px;
+  font-size: 1.1em;
+  color: #d3ae7e;
+}
+
+/* Highlighted Stats */
+#finalTax {
+  color: #d9d9d9;
+  font-weight: bold;
+}
+
+#bracketMessage {
+  color: #d9d9d9;
+  font-style: italic;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+#streaks,
+#powers {
+  color: #d3ae7e;
+  font-weight: bold;
 }
 
 /* Footer */
