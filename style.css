@@ -9,7 +9,6 @@ body {
   text-align: center;
 }
 
-/* Logo Header */
 #logoHeader {
   text-align: center;
   margin-top: 20px;
@@ -22,7 +21,6 @@ body {
   height: auto;
 }
 
-/* Tooltip Hover */
 #logoHeader a {
   position: relative;
   display: inline-block;
@@ -49,7 +47,6 @@ body {
   opacity: 1;
 }
 
-/* Calculator Boxes */
 #calculatorBox,
 #finalTaxBox {
   border: 5px solid rgba(211, 174, 126, 0.3);
@@ -60,7 +57,6 @@ body {
   background-color: #1f2025;
 }
 
-/* Headings */
 h2 {
   font-family: 'Lilita One', cursive;
   color: #d3ae7e;
@@ -68,7 +64,6 @@ h2 {
   font-weight: normal;
 }
 
-/* Inputs and Labels */
 label {
   display: block;
   margin: 15px auto 5px auto;
@@ -99,7 +94,6 @@ input[type="radio"] {
   margin: 0 8px;
 }
 
-/* Charity Question Styling */
 #calculatorBox p {
   font-size: 1.1em;
   margin-top: 20px;
@@ -108,7 +102,6 @@ input[type="radio"] {
   font-weight: bold;
 }
 
-/* Buttons */
 button {
   background-color: rgba(0, 0, 0, 0.3);
   color: #d3ae7e;
@@ -128,7 +121,6 @@ button:hover {
   transform: translateY(-2px);
 }
 
-/* Streak Tracker */
 #tallyProgress {
   color: #d3ae7e;
   font-weight: 700;
@@ -140,7 +132,6 @@ button:hover {
   letter-spacing: 1px;
 }
 
-/* Summary Info */
 #summaryBox,
 #finalSummary p {
   margin-top: 15px;
@@ -161,12 +152,13 @@ button:hover {
 }
 
 #streaks,
-#powers {
+#powers,
+#totalBreaks,
+#breaksLabel {
   color: #d3ae7e;
   font-weight: bold;
 }
 
-/* Footer */
 #siteFooter {
   text-align: center;
   font-family: 'Roboto', sans-serif;
