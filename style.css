@@ -17,12 +17,12 @@ body {
 }
 
 #haggleLogo {
-  max-width: 300px;
-  width: 100%;
+  max-width: 120px;
+  width: 30%;
   height: auto;
 }
 
-/* Tooltip on Hover */
+/* Tooltip Hover */
 #logoHeader a {
   position: relative;
   display: inline-block;
@@ -68,7 +68,7 @@ h2 {
   font-weight: normal;
 }
 
-/* Labels and Inputs */
+/* Inputs and Labels */
 label {
   display: block;
   margin: 15px auto 5px auto;
@@ -89,13 +89,23 @@ input[type="number"] {
   margin: 0 auto 10px auto;
 }
 
-input[type="checkbox"] {
+input[type="checkbox"],
+input[type="radio"] {
   accent-color: #d3ae7e;
-  transform: scale(3);
-  margin: 10px auto 15px auto;
-  display: block;
-  width: 10px;
-  height: 50px;
+}
+
+input[type="radio"] {
+  transform: scale(1.5);
+  margin: 0 8px;
+}
+
+/* Charity Question Styling */
+#calculatorBox p {
+  font-size: 1.1em;
+  margin-top: 20px;
+  margin-bottom: 5px;
+  color: #d9d9d9;
+  font-weight: bold;
 }
 
 /* Buttons */
@@ -138,7 +148,6 @@ button:hover {
   color: #d3ae7e;
 }
 
-/* Highlighted Stats */
 #finalTax {
   color: #d9d9d9;
   font-weight: bold;
