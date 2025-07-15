@@ -84,38 +84,42 @@ function calculate() {
   const interrupted = interruptedChoice.value === "yes";
 
   if (interrupted) {
-    customPopup("Did you complete any streaks before taking from charity?", function(completedBefore) {
-      if (completedBefore) {
-        customInputPopup("How many normal cards were donated before charity was taken?", function(before) {
-          if (before > normalNum) {
-            customPopup("Invalid input: cannot exceed total normal cards this round.");
-            return;
-          }
+    if (normalNum === 0) {
+      finalizeRound(powerNum);
+    } else {
+      customPopup("Did you complete any streaks before taking from charity?", function(completedBefore) {
+        if (completedBefore) {
+          customInputPopup("How many normal cards were donated before charity was taken?", function(before) {
+            if (before > normalNum) {
+              customPopup("Invalid input: cannot exceed total normal cards this round.");
+              return;
+            }
 
-          normalProgress += before;
-          completedStreaks += Math.floor(normalProgress / 5);
-          normalProgress %= 5;
+            normalProgress += before;
+            completedStreaks += Math.floor(normalProgress / 5);
+            normalProgress %= 5;
 
-          const after = normalNum - before;
-          completedStreaks += Math.floor(after / 5);
-          normalProgress = after % 5;
+            const after = normalNum - before;
+            completedStreaks += Math.floor(after / 5);
+            normalProgress = after % 5;
 
-          finalizeRound(powerNum);
-        });
-      } else {
-        customInputPopup("How many normal cards were donated after charity was taken?", function(after) {
-          if (after > normalNum) {
-            customPopup("Invalid input: cannot exceed total normal cards this round.");
-            return;
-          }
+            finalizeRound(powerNum);
+          });
+        } else {
+          customInputPopup("How many normal cards were donated after charity was taken?", function(after) {
+            if (after > normalNum) {
+              customPopup("Invalid input: cannot exceed total normal cards this round.");
+              return;
+            }
 
-          completedStreaks += Math.floor(after / 5);
-          normalProgress = after % 5;
+            completedStreaks += Math.floor(after / 5);
+            normalProgress = after % 5;
 
-          finalizeRound(powerNum);
-        });
-      }
-    });
+            finalizeRound(powerNum);
+          });
+        }
+      });
+    }
   } else {
     normalProgress += normalNum;
     completedStreaks += Math.floor(normalProgress / 5);
@@ -207,18 +211,18 @@ function playAgain() {
   customPopup("Are you sure you want to reset the game and start over?", function(confirmReset) {
     if (confirmReset) {
       confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+              particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
 
-      normalProgress = 0;
-      completedStreaks = 0;
-      powerCardsTotal = 0;
+    normalProgress = 0;
+    completedStreaks = 0;
+    powerCardsTotal = 0;
 
-      loadCalculator();
-    }
-  });
+    loadCalculator();
+  }
+});
 }
 
 function renderCardProgress(progress) {
