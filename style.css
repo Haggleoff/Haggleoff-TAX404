@@ -25,27 +25,18 @@ body {
   height: auto;
 }
 
-/* 📦 Section Containers */
-#calculatorContainer,
-#endgameContainer {
+/* 📦 Main Game Container */
+#mainGameContainer {
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  margin-top: 20px;
-  opacity: 1;
-  transition: opacity 0.4s ease;
-  pointer-events: auto;
+  animation: fadeIn 0.4s ease;
 }
 
-.hiddenSection {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* 📦 Section Boxes */
-#calculatorBox,
-#finalTaxBox {
+/* 📦 Section Box Styling */
+.calculatorBox,
+.endgameBox {
   background-color: rgba(0, 0, 0, 0.3);
   border: 5px solid rgba(212, 175, 127, 0.3);
   padding: 20px 30px;
@@ -245,4 +236,10 @@ pre {
   border-radius: 6px;
   margin-bottom: 20px;
   box-sizing: border-box;
+}
+
+/* 🎬 Fade Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
 }

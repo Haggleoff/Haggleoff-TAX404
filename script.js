@@ -2,33 +2,80 @@ let normalProgress = 0;
 let completedStreaks = 0;
 let powerCardsTotal = 0;
 
-function renderCardProgress(progress) {
-  if (progress === 0) return "┌─┐\n│0│\n└─┘";
+window.onload = () => {
+  loadCalculator();
+};
 
-  let top = "", mid = "", bot = "";
-  for (let i = 1; i <= progress; i++) {
-    top += "┌─┐ ";
-    mid += `│${i}│ `;
-    bot += "└─┘ ";
-  }
-  return `${top.trim()}\n${mid.trim()}\n${bot.trim()}`;
+function loadCalculator() {
+  const container = document.getElementById("mainGameContainer");
+  container.innerHTML = `
+    <div class="calculatorBox">
+      <h2>Tax Break Calculator</h2>
+      <pre id="tallyProgress">–</pre>
+      <p>Completed Streaks: <span id="streaks">0</span></p>
+
+      <label>Normal Cards Donated (this round):</label>
+      <input type="number" id="normal" min="0" step="1" oninput="validity.valid||(value='');"><br>
+
+      <p>Total Power Cards Donated: <span id="powers">0</span></p>
+      <label>Power Cards Donated (this round):</label>
+      <input type="number" id="power" min="0" step="1" oninput="validity.valid||(value='');"><br>
+
+      <p>Did you take from Charity (this round)?</p>
+      <label><input type="radio" name="interrupted" value="yes"> Yes</label>
+      <label><input type="radio" name="interrupted" value="no"> No</label><br>
+
+      <div id="summaryBox">
+        <p id="breaksLabel">Tax Breaks Earned (until now): <span id="totalBreaks">0</span></p>
+      </div>
+
+      <button onclick="calculate()">Update Charity Play</button>
+      <button onclick="showEndgame()">Endgame Taxes</button>
+    </div>
+  `;
+}
+
+function loadEndgame() {
+  const container = document.getElementById("mainGameContainer");
+  container.innerHTML = `
+    <div class="endgameBox">
+      <h2>Endgame</h2>
+
+      <label>Total Haggleoffs (coins) at Endgame:</label>
+      <input type="number" id="coinsEarned" min="0" step="1" oninput="validity.valid||(value='');"><br>
+
+      <label>Properties Owned at Endgame:</label>
+      <input type="number" id="propertiesOwned" min="1" step="1" oninput="validity.valid||(value='');"><br>
+
+      <button onclick="calculateFinalTaxes()">Calculate Taxes</button>
+
+      <div id="finalSummary">
+        <p>Tax Breaks Applied: <span id="finalBreaksApplied">–</span></p>
+        <p>Taxes Owed: <span id="finalTax">–</span></p>
+        <p>Effective Tax Rate (Before Breaks): <span id="taxRateBefore">–</span></p>
+        <p>Effective Tax Rate (After Breaks): <span id="taxRateCategory">–</span></p>
+        <p><span id="bracketMessage"></span></p>
+        <button id="playAgainBtn" style="display: none;" onclick="playAgain()">Play Again</button>
+      </div>
+    </div>
+  `;
 }
 
 function calculate() {
-  const normal = document.getElementById("normal").value.trim();
-  const power = document.getElementById("power").value.trim();
+  const normal = document.getElementById("normal").value.trim() || "0";
+  const power = document.getElementById("power").value.trim() || "0";
   const interruptedChoice = document.querySelector('input[name="interrupted"]:checked');
 
   if (!/^\d+$/.test(normal)) {
-    customPopup("Normal Cards must be a whole number.", () => {});
+    customPopup("Normal Cards must be a whole number.");
     return;
   }
   if (!/^\d+$/.test(power)) {
-    customPopup("Power Cards must be a whole number.", () => {});
+    customPopup("Power Cards must be a whole number.");
     return;
   }
   if (!interruptedChoice) {
-    customPopup("Please select whether you took from Charity this round.", () => {});
+    customPopup("Please select whether you took from Charity this round.");
     return;
   }
 
@@ -41,7 +88,7 @@ function calculate() {
       if (completedBefore) {
         customInputPopup("How many normal cards were donated before charity was taken?", function(before) {
           if (before > normalNum) {
-            customPopup("Invalid input: cannot exceed total normal cards this round.", () => {});
+            customPopup("Invalid input: cannot exceed total normal cards this round.");
             return;
           }
 
@@ -58,7 +105,7 @@ function calculate() {
       } else {
         customInputPopup("How many normal cards were donated after charity was taken?", function(after) {
           if (after > normalNum) {
-            customPopup("Invalid input: cannot exceed total normal cards this round.", () => {});
+            customPopup("Invalid input: cannot exceed total normal cards this round.");
             return;
           }
 
@@ -97,7 +144,7 @@ function calculateFinalTaxes() {
   const propertiesInput = document.getElementById("propertiesOwned").value.trim();
 
   if (!/^\d+$/.test(coinsInput) || !/^\d+$/.test(propertiesInput)) {
-    customPopup("Please enter valid whole numbers for both fields.", () => {});
+    customPopup("Please enter valid whole numbers for both fields.");
     return;
   }
 
@@ -149,21 +196,14 @@ function calculateFinalTaxes() {
 }
 
 function showEndgame() {
-  const calculator = document.getElementById("calculatorContainer");
-  const endgame = document.getElementById("endgameContainer");
-
   customPopup("Are you sure the game is over and you're ready to file your endgame taxes?", function(confirmEnd) {
     if (confirmEnd) {
-      calculator.classList.add("hiddenSection");
-      endgame.classList.remove("hiddenSection");
+      loadEndgame();
     }
   });
 }
 
 function playAgain() {
-  const calculator = document.getElementById("calculatorContainer");
-  const endgame = document.getElementById("endgameContainer");
-
   customPopup("Are you sure you want to reset the game and start over?", function(confirmReset) {
     if (confirmReset) {
       confetti({
@@ -176,31 +216,24 @@ function playAgain() {
       completedStreaks = 0;
       powerCardsTotal = 0;
 
-      document.getElementById("normal").value = "";
-      document.getElementById("power").value = "";
-      document.querySelectorAll('input[name="interrupted"]').forEach(el => el.checked = false);
-      document.getElementById("coinsEarned").value = "";
-      document.getElementById("propertiesOwned").value = "";
-
-      document.getElementById("streaks").innerText = "0";
-      document.getElementById("powers").innerText = "0";
-      document.getElementById("totalBreaks").innerText = "0";
-      document.getElementById("tallyProgress").innerText = "–";
-
-      document.getElementById("finalBreaksApplied").innerText = "–";
-      document.getElementById("finalTax").innerText = "–";
-      document.getElementById("taxRateBefore").innerText = "–";
-      document.getElementById("taxRateCategory").innerText = "–";
-      document.getElementById("bracketMessage").innerText = "";
-
-      calculator.classList.remove("hiddenSection");
-      endgame.classList.add("hiddenSection");
-      document.getElementById("playAgainBtn").style.display = "none";
+      loadCalculator();
     }
   });
 }
 
-/* 🪄 Custom Yes/No Modal */
+function renderCardProgress(progress) {
+  if (progress === 0) return "┌─┐\n│0│\n└─┘";
+
+  let top = "", mid = "", bot = "";
+  for (let i = 1; i <= progress; i++) {
+    top += "┌─┐ ";
+    mid += `│${i}│ `;
+    bot += "└─┘ ";
+  }
+  return `${top.trim()}\n${mid.trim()}\n${bot.trim()}`;
+}
+
+/* 🪄 Custom Yes/No or OK Modal */
 function customPopup(message, callback) {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
@@ -210,14 +243,26 @@ function customPopup(message, callback) {
   msg.innerText = message;
   overlay.style.display = "flex";
 
-  yesBtn.onclick = () => {
-    overlay.style.display = "none";
-    callback(true);
-  };
-  noBtn.onclick = () => {
-    overlay.style.display = "none";
-    callback(false);
-  };
+  if (typeof callback !== "function" || callback.length === 0) {
+    // Informational popup — show only OK
+    yesBtn.innerText = "OK";
+    noBtn.style.display = "none";
+    yesBtn.onclick = () => {
+      overlay.style.display = "none";
+    };
+  } else {
+    // Decision popup — show Yes/No
+    yesBtn.innerText = "Yes";
+    noBtn.style.display = "inline-block";
+    yesBtn.onclick = () => {
+      overlay.style.display = "none";
+      callback(true);
+    };
+    noBtn.onclick = () => {
+      overlay.style.display = "none";
+      callback(false);
+    };
+  }
 }
 
 /* 📥 Custom Input Modal */
@@ -235,7 +280,7 @@ function customInputPopup(question, callback) {
   submit.onclick = () => {
     const value = field.value.trim();
     if (!/^\d+$/.test(value)) {
-      customPopup("Please enter a valid whole number.", () => {});
+      customPopup("Please enter a valid whole number.");
       return;
     }
     overlay.style.display = "none";

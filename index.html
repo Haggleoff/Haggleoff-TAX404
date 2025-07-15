@@ -1,3 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Haggleoff Game Tax Break Calculator</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -14,59 +24,10 @@
     </a>
   </div>
 
-  <!-- Tax Break Calculator -->
-  <div id="calculatorContainer">
-    <div id="calculatorBox">
-      <h2>Tax Break Calculator</h2>
+  <!-- Main Game Container (dynamic swap) -->
+  <div id="mainGameContainer"></div>
 
-      <pre id="tallyProgress">–</pre>
-      <p>Completed Streaks: <span id="streaks">0</span></p>
-
-      <label>Normal Cards Donated (this round):</label>
-      <input type="number" id="normal" min="0" step="1" oninput="validity.valid||(value='');"><br>
-
-      <p>Total Power Cards Donated: <span id="powers">0</span></p>
-      <label>Power Cards Donated (this round):</label>
-      <input type="number" id="power" min="0" step="1" oninput="validity.valid||(value='');"><br>
-
-      <p>Did you take from Charity (this round)?</p>
-      <label><input type="radio" name="interrupted" value="yes"> Yes</label>
-      <label><input type="radio" name="interrupted" value="no"> No</label><br>
-
-      <div id="summaryBox">
-        <p id="breaksLabel">Tax Breaks Earned (until now): <span id="totalBreaks">0</span></p>
-      </div>
-
-      <button onclick="calculate()">Update Charity Play</button>
-      <button onclick="showEndgame()">Endgame Taxes</button>
-    </div>
-  </div>
-
-  <!-- Endgame Taxes Section -->
-  <div id="endgameContainer" class="hiddenSection">
-    <div id="finalTaxBox">
-      <h2>Endgame</h2>
-
-      <label>Total Haggleoffs (coins) at Endgame:</label>
-      <input type="number" id="coinsEarned" min="0" step="1" oninput="validity.valid||(value='');"><br>
-
-      <label>Properties Owned at Endgame:</label>
-      <input type="number" id="propertiesOwned" min="1" step="1" oninput="validity.valid||(value='');"><br>
-
-      <button onclick="calculateFinalTaxes()">Calculate Taxes</button>
-
-      <div id="finalSummary">
-        <p>Tax Breaks Applied: <span id="finalBreaksApplied">–</span></p>
-        <p>Taxes Owed: <span id="finalTax">–</span></p>
-        <p>Effective Tax Rate (Before Breaks): <span id="taxRateBefore">–</span></p>
-        <p>Effective Tax Rate (After Breaks): <span id="taxRateCategory">–</span></p>
-        <p><span id="bracketMessage"></span></p>
-        <button id="playAgainBtn" style="display: none;" onclick="playAgain()">Play Again</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Custom Yes/No Popup -->
+  <!-- Custom Yes/No or OK Popup -->
   <div id="customPopupOverlay">
     <div id="customPopupBox">
       <p id="customPopupMessage">Placeholder message</p>
@@ -100,5 +61,10 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="script.js"></script>
+</body>
+</html>
+<!-- partial -->
+  <script  src="./script.js"></script>
+
 </body>
 </html>
