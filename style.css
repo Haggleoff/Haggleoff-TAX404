@@ -162,7 +162,7 @@ pre {
   white-space: pre;
 }
 
-/* 🪄 Custom Yes/No Popup */
+/* 🪄 Custom Popups */
 #customPopupOverlay,
 #customInputOverlay {
   position: fixed;
