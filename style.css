@@ -187,43 +187,59 @@ button.styled-btn,
   animation: flickerTax404 2.5s ease-in-out;
 }
 
+/* 📱 Smartphone Optimization */
 @media screen and (max-width: 600px) {
-  .calculatorBox, .playerEndgameBlock {
+  body {
     padding: 1rem;
-    font-size: 0.95rem;
+    box-sizing: border-box;
   }
 
-  input[type="number"],
-  select,
-  button {
-    font-size: 1rem;
+  #siteHeader, #siteFooter, .calculatorBox, .popupBox {
     width: 100%;
+    max-width: 100%;
+    padding: 1rem;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  h1, h2, h3 {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  p, label {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    font-size: 1rem;
+    padding: 0.6rem;
     margin: 0.4rem 0;
   }
 
+  button,
+  .popupBox button,
+  button.styled-btn {
+    font-size: 1rem;
+    width: 100%;
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+
+  #siteLogo {
+    width: 64px;
+    height: auto;
+  }
+
   .sideInputs {
-    display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
 
-  pre {
-    font-size: 0.9rem;
-    line-height: 1.2;
-    overflow-x: auto;
-  }
-
-  #globalClockContainer {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  #playerTimer {
-    font-size: 1.8rem;
-  }
-
-  .styled-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.95rem;
+  .popupBox input {
+    width: 100%;
   }
 }
