@@ -7,7 +7,7 @@
 </head>
 <body>
 
-  <!-- Logo Header with Tooltip Link -->
+  <!-- Logo Header -->
   <div id="logoHeader">
     <a href="https://haggleoff.com" target="_blank" rel="noopener noreferrer">
       <img src="HaggleoffTAX404-logo.png" alt="Haggleoff Logo" id="haggleLogo">
@@ -15,49 +15,77 @@
   </div>
 
   <!-- Tax Break Calculator -->
-  <div id="calculatorBox">
-    <h2>Tax Break Calculator</h2>
+  <div id="calculatorContainer">
+    <div id="calculatorBox">
+      <h2>Tax Break Calculator</h2>
 
-    <p>Streak Progress:</p>
-    <pre id="tallyProgress">–</pre>
-    <p>Completed Streaks: <span id="streaks">0</span></p>
+      <pre id="tallyProgress">–</pre>
+      <p>Completed Streaks: <span id="streaks">0</span></p>
 
-    <label>Normal Cards Donated (this round):</label>
-    <input type="number" id="normal" min="0" step="1"><br>
+      <label>Normal Cards Donated (this round):</label>
+      <input type="number" id="normal" min="0" step="1" oninput="validity.valid||(value='');"><br>
 
-    <p>Total Power Cards Donated: <span id="powers">0</span></p>
-    <label>Power Cards Donated (this round):</label>
-    <input type="number" id="power" min="0" step="1"><br>
+      <p>Total Power Cards Donated: <span id="powers">0</span></p>
+      <label>Power Cards Donated (this round):</label>
+      <input type="number" id="power" min="0" step="1" oninput="validity.valid||(value='');"><br>
 
-    <p>Did you take from Charity (this round)?</p>
-    <label><input type="radio" name="interrupted" value="yes"> Yes</label>
-    <label><input type="radio" name="interrupted" value="no"> No</label><br>
+      <p>Did you take from Charity (this round)?</p>
+      <label><input type="radio" name="interrupted" value="yes"> Yes</label>
+      <label><input type="radio" name="interrupted" value="no"> No</label><br>
 
-    <div id="summaryBox">
-      <p id="breaksLabel">Tax Breaks Earned (until now): <span id="totalBreaks">0</span></p>
+      <div id="summaryBox">
+        <p id="breaksLabel">Tax Breaks Earned (until now): <span id="totalBreaks">0</span></p>
+      </div>
+
+      <button onclick="calculate()">Update Charity Play</button>
+      <button onclick="showEndgame()">Endgame Taxes</button>
     </div>
-
-    <button onclick="calculate()">Update Charity Play</button>
   </div>
 
-  <!-- Final Tax Calculator -->
-  <div id="finalTaxBox">
-    <h2>Taxes Owed (Endgame)</h2>
+  <!-- Endgame Taxes Section -->
+  <div id="endgameContainer" style="display: none;">
+    <div id="finalTaxBox">
+      <h2>Endgame</h2>
 
-    <label>Total Haggleoffs (coins) at Endgame:</label>
-    <input type="number" id="coinsEarned" min="0" step="1"><br>
+      <label>Total Haggleoffs (coins) at Endgame:</label>
+      <input type="number" id="coinsEarned" min="0" step="1" oninput="validity.valid||(value='');"><br>
 
-    <label>Properties Owned at Endgame:</label>
-    <input type="number" id="propertiesOwned" min="1" step="1"><br>
+      <label>Properties Owned at Endgame:</label>
+      <input type="number" id="propertiesOwned" min="1" step="1" oninput="validity.valid||(value='');"><br>
 
-    <button onclick="calculateFinalTaxes()">Calculate Final Taxes</button>
+      <button onclick="calculateFinalTaxes()">Calculate Taxes</button>
 
-    <div id="finalSummary">
-      <p>Tax Breaks Applied: <span id="finalBreaksApplied">–</span></p>
-      <p>Taxes Owed: <span id="finalTax">–</span></p>
-      <p>Effective Tax Rate (Before Breaks): <span id="taxRateBefore">–</span></p>
-      <p>Effective Tax Rate (After Breaks): <span id="taxRateCategory">–</span></p>
-      <p><span id="bracketMessage"></span></p>
+      <div id="finalSummary">
+        <p>Tax Breaks Applied: <span id="finalBreaksApplied">–</span></p>
+        <p>Taxes Owed: <span id="finalTax">–</span></p>
+        <p>Effective Tax Rate (Before Breaks): <span id="taxRateBefore">–</span></p>
+        <p>Effective Tax Rate (After Breaks): <span id="taxRateCategory">–</span></p>
+        <p><span id="bracketMessage"></span></p>
+        <button id="playAgainBtn" style="display: none;" onclick="playAgain()">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Yes/No Popup -->
+  <div id="customPopupOverlay">
+    <div id="customPopupBox">
+      <p id="customPopupMessage">Placeholder message</p>
+      <div id="customPopupButtons">
+        <button id="customPopupYes">Yes</button>
+        <button id="customPopupNo">No</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Input Popup -->
+  <div id="customInputOverlay">
+    <div id="customInputBox">
+      <p id="customInputMessage">Enter value</p>
+      <input type="number" id="customInputField" min="0" step="1" oninput="validity.valid||(value='');" />
+      <div id="customInputButtons">
+        <button id="customInputSubmit">Submit</button>
+        <button id="customInputCancel">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -69,6 +97,8 @@
     </p>
   </footer>
 
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
