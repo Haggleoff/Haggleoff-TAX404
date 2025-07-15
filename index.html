@@ -2,7 +2,7 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Haggleoff Game Tax Break Calculator</title>
+  <title>Untitled</title>
   <link rel="stylesheet" href="./style.css">
 
 </head>
@@ -11,56 +11,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Haggleoff TAX404</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto&display=swap" rel="stylesheet" />
+  <style>
+    @keyframes flickerTax404 {
+      0% { opacity: 1; } 10% { opacity: 0.4; }
+      20% { opacity: 0.8; } 30% { opacity: 0.3; }
+      40% { opacity: 0.9; } 50% { opacity: 0.2; }
+      60% { opacity: 0.6; } 70% { opacity: 1; }
+      80% { opacity: 0.5; } 90% { opacity: 0.75; }
+      100% { opacity: 1; }
+    }
+    .flicker-start {
+      animation: flickerTax404 2.5s ease-in-out;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Logo Header -->
-  <div id="logoHeader">
-    <a href="https://haggleoff.com" target="_blank" rel="noopener noreferrer">
-      <img src="HaggleoffTAX404-logo.png" alt="Haggleoff Logo" id="haggleLogo">
-    </a>
+  <!-- 🛡️ Disclaimer Overlay -->
+  <div id="disclaimerOverlay" class="dimOverlay" style="display: flex;">
+    <div class="popupBox">
+      <h2 style="font-family: 'Lilita One'; color: #d4af7f;">Legal Disclaimer</h2>
+      <p style="text-align: left;">
+        TAX404 is not a real tax software. It is a fictional component of Haggleoff’s card game experience.<br><br>
+        Haggleoff LLC and TAX404 do not offer financial, accounting, legal, or tax advice through this platform. Use of this software should be considered purely satirical and recreational.<br><br>
+        By continuing, you acknowledge that this experience is for gameplay purposes only and does not constitute financial guidance.
+      </p>
+      <button onclick="dismissDisclaimer()">I Understand</button>
+    </div>
   </div>
 
-  <!-- Main Game Container (dynamic swap) -->
+  <!-- 🏢 Header -->
+  <div id="siteHeader">
+    <a href="https://haggleoff.com" target="_blank">
+      <img id="siteLogo" src="logo.png" alt="Haggleoff Logo" />
+    </a>
+    <h1 id="taxLogoText" class="flicker-start" style="font-family: 'Lilita One'; color: #d4af7f;">TAX404</h1>
+    <p style="font-style: italic; font-family: 'Roboto'; color: #d9d9d9; margin-top: -0.5rem;">
+      Mediocre tax software courtesy of Haggleoff
+    </p>
+  </div>
+
+  <!-- 🎲 Player Setup -->
+  <div id="playerSetupBox" style="display: none;">
+    <form id="playerForm" class="calculatorBox">
+      <h2 style="font-family: 'Lilita One'; color: #d4af7f;">Enter Player Names</h2>
+      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 1 (required)" required />
+      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 2 (required)" required />
+      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 3 (optional)" />
+      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 4 (optional)" />
+      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 5 (optional)" />
+      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 6 (optional)" />
+      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 7 (optional)" />
+      <button type="submit">Start Game</button>
+    </form>
+  </div>
+
+  <!-- ⏱️ Timer Container -->
+  <div id="globalClockContainer" style="display: none;"></div>
+
+  <!-- 📊 Main Gameplay -->
   <div id="mainGameContainer"></div>
 
-  <!-- Custom Yes/No or OK Popup -->
-  <div id="customPopupOverlay">
-    <div id="customPopupBox">
-      <p id="customPopupMessage">Placeholder message</p>
-      <div id="customPopupButtons">
-        <button id="customPopupYes">Yes</button>
-        <button id="customPopupNo">No</button>
-      </div>
+  <!-- 🪄 Confirmation Popup -->
+  <div id="customPopupOverlay" class="dimOverlay">
+    <div class="popupBox">
+      <div id="customPopupMessage"></div>
+      <button id="customPopupYes">Yes</button>
+      <button id="customPopupNo">No</button>
     </div>
   </div>
 
-  <!-- Custom Input Popup -->
-  <div id="customInputOverlay">
-    <div id="customInputBox">
-      <p id="customInputMessage">Enter value</p>
-      <input type="number" id="customInputField" min="0" step="1" oninput="validity.valid||(value='');" />
-      <div id="customInputButtons">
-        <button id="customInputSubmit">Submit</button>
-        <button id="customInputCancel">Cancel</button>
-      </div>
+  <!-- 🔢 Input Popup -->
+  <div id="customInputOverlay" class="dimOverlay">
+    <div class="popupBox">
+      <div id="customInputMessage"></div>
+      <input type="number" id="customInputField" min="0" step="1" />
+      <br><br>
+      <button id="customInputSubmit">Submit</button>
+      <button id="customInputCancel">Cancel</button>
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer id="siteFooter">
+  <!-- 🖋️ Footer -->
+  <div id="siteFooter">
     <p>
-      Copyright © 2025 Haggleoff LLC. All rights reserved.<br>
+      Copyright © 2025 Haggleoff LLC. All rights reserved.<br />
       Haggleoff, the V emblem, the Haggleoff logo, and the Tax404 logo are trademarks of Haggleoff LLC.
     </p>
-  </footer>
+  </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- 🧠 Script -->
   <script src="script.js"></script>
+  <script>
+    window.addEventListener("load", function () {
+      const logo = document.getElementById("taxLogoText");
+      logo.classList.remove("flicker-start");
+      setTimeout(() => logo.classList.add("flicker-start"), 500);
+    });
+
+    function dismissDisclaimer() {
+      document.getElementById("disclaimerOverlay").style.display = "none";
+      document.getElementById("playerSetupBox").style.display = "block";
+    }
+  </script>
+
 </body>
 </html>
 <!-- partial -->
