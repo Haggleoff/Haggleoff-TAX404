@@ -149,15 +149,21 @@ function calculateFinalTaxes() {
 }
 
 function showEndgame() {
+  const calculator = document.getElementById("calculatorContainer");
+  const endgame = document.getElementById("endgameContainer");
+
   customPopup("Are you sure the game is over and you're ready to file your endgame taxes?", function(confirmEnd) {
     if (confirmEnd) {
-      document.getElementById("calculatorContainer").style.display = "none";
-      document.getElementById("endgameContainer").style.display = "block";
+      calculator.classList.add("hiddenSection");
+      endgame.classList.remove("hiddenSection");
     }
   });
 }
 
 function playAgain() {
+  const calculator = document.getElementById("calculatorContainer");
+  const endgame = document.getElementById("endgameContainer");
+
   customPopup("Are you sure you want to reset the game and start over?", function(confirmReset) {
     if (confirmReset) {
       confetti({
@@ -187,8 +193,8 @@ function playAgain() {
       document.getElementById("taxRateCategory").innerText = "–";
       document.getElementById("bracketMessage").innerText = "";
 
-      document.getElementById("endgameContainer").style.display = "none";
-      document.getElementById("calculatorContainer").style.display = "block";
+      calculator.classList.remove("hiddenSection");
+      endgame.classList.add("hiddenSection");
       document.getElementById("playAgainBtn").style.display = "none";
     }
   });
