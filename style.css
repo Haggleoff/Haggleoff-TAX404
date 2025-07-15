@@ -186,3 +186,44 @@ button.styled-btn,
 .flicker-start {
   animation: flickerTax404 2.5s ease-in-out;
 }
+
+@media screen and (max-width: 600px) {
+  .calculatorBox, .playerEndgameBlock {
+    padding: 1rem;
+    font-size: 0.95rem;
+  }
+
+  input[type="number"],
+  select,
+  button {
+    font-size: 1rem;
+    width: 100%;
+    margin: 0.4rem 0;
+  }
+
+  .sideInputs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  pre {
+    font-size: 0.9rem;
+    line-height: 1.2;
+    overflow-x: auto;
+  }
+
+  #globalClockContainer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #playerTimer {
+    font-size: 1.8rem;
+  }
+
+  .styled-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+  }
+}
