@@ -1,13 +1,20 @@
 <!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Untitled</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Haggleoff TAX404</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto&display=swap" rel="stylesheet" />
   <style>
-    /* ⚡ Logo Flicker Animation */
     @keyframes flickerTax404 {
       0% { opacity: 1; } 10% { opacity: 0.4; }
       20% { opacity: 0.8; } 30% { opacity: 0.3; }
@@ -20,14 +27,13 @@
       animation: flickerTax404 2.5s ease-in-out;
     }
 
-    /* 📱 Mobile Optimization */
     @media screen and (max-width: 600px) {
       body {
         padding: 1rem;
         box-sizing: border-box;
       }
 
-      #siteHeader, #siteFooter, .calculatorBox, .popupBox {
+      #siteHeader, .calculatorBox, .popupBox {
         width: 100%;
         max-width: 100%;
         padding: 1rem;
@@ -76,6 +82,14 @@
         width: 100%;
       }
     }
+
+    /* Footer tweak */
+    #siteFooter {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #d9d9d9;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
@@ -108,13 +122,15 @@
   <div id="playerSetupBox" style="display: none;">
     <form id="playerForm" class="calculatorBox">
       <h2 style="font-family: 'Lilita One'; color: #d4af7f;">Enter Player Names</h2>
-      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 1 (required)" required />
-      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 2 (required)" required />
-      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 3 (optional)" />
-      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 4 (optional)" />
-      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 5 (optional)" />
-      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 6 (optional)" />
-      <input type="text" name="playerName" pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed" placeholder="Player 7 (optional)" />
+
+      <!-- ✅ Input field pattern updated -->
+      <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 1 (required)" required />
+      <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 2 (required)" required />
+      <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 3 (optional)" />
+      <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 4 (optional)" />
+      <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 5 (optional)" />
+      <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 6 (optional)" />
+      <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 7 (optional)" />
       <button type="submit">Start Game</button>
     </form>
   </div>
@@ -167,6 +183,11 @@
       document.getElementById("playerSetupBox").style.display = "block";
     }
   </script>
+
+</body>
+</html>
+<!-- partial -->
+  <script  src="./script.js"></script>
 
 </body>
 </html>

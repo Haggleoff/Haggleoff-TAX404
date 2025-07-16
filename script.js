@@ -108,15 +108,36 @@ function decrementTimer() {
   if (timeLeft <= 0) {
     clearInterval(timerInterval);
     timerInterval = null;
-    customHTMLPopup(`${players[currentPlayerIndex].name}'s time is up. What now?`, `
+    const btn = document.getElementById("pauseResumeBtn");
+    btn.innerText = "Restart Timer";
+
+    const overlay = document.getElementById("customPopupOverlay");
+    const msg = document.getElementById("customPopupMessage");
+    const yesBtn = document.getElementById("customPopupYes");
+    const noBtn = document.getElementById("customPopupNo");
+
+    msg.innerHTML = `${players[currentPlayerIndex].name}'s time is up. What now?<br><br>
       <button onclick="handleNextPlayer()">Next Player</button>
       <button onclick="loadCharityEntry()">Record Charity Play</button>
-    `, () => {});
+    `;
+    overlay.style.display = "flex";
+    yesBtn.style.display = "none";
+    noBtn.style.display = "none";
   }
 }
 
 function toggleTimer() {
   const btn = document.getElementById("pauseResumeBtn");
+
+  if (timeLeft <= 0) {
+    timeLeft = 60;
+    updateTimerDisplay();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(decrementTimer, 1000);
+    btn.innerText = "Pause Timer";
+    return;
+  }
+
   if (btn.innerText === "Pause Timer") {
     clearInterval(timerInterval);
     timerInterval = null;
@@ -128,23 +149,14 @@ function toggleTimer() {
 }
 
 function handleNextPlayer() {
-  customHTMLPopup("Select next player:", buildPlayerDropdownHTML(), () => {});
+  document.getElementById("customPopupOverlay").style.display = "none";
+  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  initializeTurn();
 }
 
 function loadCharityEntry() {
   document.getElementById("customPopupOverlay").style.display = "none";
   loadCalculator();
-}
-
-function renderCardProgress(progress) {
-  if (progress === 0) return `<pre style="color:#d4af7f;">┌─┐\n│0│\n└─┘</pre>`;
-  let top = "", mid = "", bot = "";
-  for (let i = 1; i <= progress; i++) {
-    top += "┌─┐ ";
-    mid += `│${i}│ `;
-    bot += "└─┘ ";
-  }
-  return `<pre style="color:#d4af7f;">${top.trim()}\n${mid.trim()}\n${bot.trim()}</pre>`;
 }
 
 function loadCalculator() {
@@ -335,7 +347,7 @@ function getTaxBracketMessage(coins) {
 function determineWinner() {
   const netWorths = players.map(p => p.coins - p.tax);
   const maxCoins = Math.max(...netWorths);
-  const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
+    const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
   const summary = document.getElementById("finalSummary");
 
   if (contenders.length === 1) {
@@ -454,4 +466,15 @@ function customHTMLPopup(message, html, callback) {
   }
 
   if (typeof callback === "function") callback();
+}
+
+function renderCardProgress(progress) {
+  if (progress === 0) return `<pre style="color:#d4af7f;">┌─┐\n│0│\n└─┘</pre>`;
+  let top = "", mid = "", bot = "";
+  for (let i = 1; i <= progress; i++) {
+    top += "┌─┐ ";
+    mid += `│${i}│ `;
+    bot += "└─┘ ";
+  }
+  return `<pre style="color:#d4af7f;">${top.trim()}\n${mid.trim()}\n${bot.trim()}</pre>`;
 }
