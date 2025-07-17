@@ -1,4 +1,3 @@
-//Globals & Player Form Submission
 let players = [];
 let currentPlayerIndex = 0;
 let timerInterval = null;
@@ -26,6 +25,8 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
   document.getElementById("playerSetupBox").style.display = "none";
   document.getElementById("globalClockContainer").style.display = "block";
 
+  customPopup("Reloading this page will reset your progress.");
+
   if (players.length === 1) {
     initializeTurn();
   } else {
@@ -47,7 +48,6 @@ function addPlayerField() {
   container.appendChild(input);
 }
 
-//Player Selection Flow
 function showStartOptions() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
@@ -101,7 +101,6 @@ function randomStarter() {
   }, 3000);
 }
 
-//Timer Mechanics
 function initializeTurn() {
   loadCalculator();
   startTurn();
@@ -124,6 +123,27 @@ function updateTimerDisplay() {
   `;
 }
 
+function toggleTimer() {
+  const btn = document.getElementById("pauseResumeBtn");
+
+  if (timeLeft <= 0 && btn.innerText === "Restart Timer") {
+    timeLeft = 60;
+    updateTimerDisplay();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(decrementTimer, 1000);
+    return;
+  }
+
+  if (btn.innerText === "Pause Timer") {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    btn.innerText = "Resume Timer";
+  } else {
+    timerInterval = setInterval(decrementTimer, 1000);
+    btn.innerText = "Pause Timer";
+  }
+}
+
 function decrementTimer() {
   timeLeft--;
   document.getElementById("playerTimer").innerText = timeLeft;
@@ -131,6 +151,7 @@ function decrementTimer() {
   if (timeLeft <= 0) {
     clearInterval(timerInterval);
     timerInterval = null;
+
     const btn = document.getElementById("pauseResumeBtn");
     if (btn) btn.innerText = "Restart Timer";
 
@@ -153,26 +174,6 @@ function decrementTimer() {
   }
 }
 
-function toggleTimer() {
-  const btn = document.getElementById("pauseResumeBtn");
-  if (timeLeft <= 0 && btn.innerText === "Restart Timer") {
-    timeLeft = 60;
-    updateTimerDisplay();
-    clearInterval(timerInterval);
-    timerInterval = setInterval(decrementTimer, 1000);
-    return;
-  }
-
-  if (btn.innerText === "Pause Timer") {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    btn.innerText = "Resume Timer";
-  } else {
-    timerInterval = setInterval(decrementTimer, 1000);
-    btn.innerText = "Pause Timer";
-  }
-}
-
 function handleNextPlayer() {
   document.getElementById("customPopupOverlay").style.display = "none";
   currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
@@ -184,7 +185,6 @@ function loadCharityEntry() {
   loadCalculator();
 }
 
-//Main Gameplay UI
 function loadCalculator() {
   const p = players[currentPlayerIndex];
   updateTimerDisplay();
@@ -210,7 +210,6 @@ function loadCalculator() {
   `;
 }
 
-//Charity Play Logic
 function calculate() {
   const normalVal = document.getElementById("normal").value.trim();
   const powerVal = document.getElementById("power").value.trim();
@@ -220,9 +219,7 @@ function calculate() {
   const normalNum = /^\d+$/.test(normalVal) ? Number(normalVal) : 0;
   const powerNum = /^\d+$/.test(powerVal) ? Number(powerVal) : 0;
 
-  if (!interruptedChoice) {
-    return customPopup("Please select whether Charity was taken this round.");
-  }
+  if (!interruptedChoice) return customPopup("Please select whether Charity was taken this round.");
 
   if (interruptedChoice.value === "yes") {
     if (p.progress > 0) p.progress = 0;
@@ -277,7 +274,6 @@ function calculate() {
   document.querySelectorAll('input[name="interrupted"]').forEach(el => el.checked = false);
 }
 
-//Endgame Scoring & Results
 function showEndgame() {
   customPopup("Is the game over? Ready for final taxes?", function(confirm) {
     if (confirm) loadEndgame();
@@ -310,7 +306,6 @@ function loadEndgame() {
   `;
 }
 
-//Tax Calculations & Winner Reveal
 function calculateFinalTaxes() {
   const summary = document.getElementById("finalSummary");
   summary.style.display = "block";
@@ -396,7 +391,6 @@ function determineWinner() {
   `;
 }
 
-//Navigation & Game Reset
 function restartGame() {
   showStartOptions();
 }
@@ -419,7 +413,6 @@ function backToNameInput() {
   currentPlayerIndex = 0;
 }
 
-//Popups & Interactive Overlays
 function customPopup(message, callback) {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
@@ -497,7 +490,6 @@ function customHTMLPopup(message, html, callback) {
   if (typeof callback === "function") callback();
 }
 
-//Card Progress Renderer
 function renderCardProgress(progress) {
   if (progress === 0) return `<pre style="color:#d4af7f;">┌─┐\n│0│\n└─┘</pre>`;
   let top = "", mid = "", bot = "";

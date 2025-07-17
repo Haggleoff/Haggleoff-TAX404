@@ -17,84 +17,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto&display=swap" rel="stylesheet" />
   <style>
     @keyframes flickerTax404 {
-      0% { opacity: 1; } 10% { opacity: 0.4; }
-      20% { opacity: 0.8; } 30% { opacity: 0.3; }
-      40% { opacity: 0.9; } 50% { opacity: 0.2; }
-      60% { opacity: 0.6; } 70% { opacity: 1; }
-      80% { opacity: 0.5; } 90% { opacity: 0.75; }
-      100% { opacity: 1; }
+      0%, 70%, 100% { opacity: 1; }
+      10% { opacity: 0.4; } 30% { opacity: 0.3; } 50% { opacity: 0.2; } 90% { opacity: 0.75; }
     }
     .flicker-start {
       animation: flickerTax404 2.5s ease-in-out;
     }
 
     @media screen and (max-width: 600px) {
-      body {
-        padding: 1rem;
-        box-sizing: border-box;
-      }
-
+      body { padding: 1rem; box-sizing: border-box; }
       #siteHeader, .calculatorBox, .popupBox {
-        width: 100%;
-        max-width: 100%;
-        padding: 1rem;
-        margin: 0 auto;
-        box-sizing: border-box;
+        width: 100%; max-width: 100%; padding: 1rem;
+        margin: 0 auto; box-sizing: border-box;
       }
-
-      h1, h2, h3 {
-        font-size: 1.4rem;
-        text-align: center;
+      h1, h2, h3 { font-size: 1.4rem; text-align: center; }
+      p, label { font-size: 0.9rem; line-height: 1.4; }
+      input[type="text"], input[type="number"], select {
+        font-size: 1rem; padding: 0.6rem; margin: 0.4rem 0;
       }
-
-      p, label {
-        font-size: 0.9rem;
-        line-height: 1.4;
+      button, .popupBox button, button.styled-btn {
+        font-size: 1rem; width: 100%; margin: 0.5rem 0; padding: 0.75rem;
       }
-
-      input[type="text"],
-      input[type="number"],
-      select {
-        font-size: 1rem;
-        padding: 0.6rem;
-        margin: 0.4rem 0;
-      }
-
-      button,
-      .popupBox button,
-      button.styled-btn {
-        font-size: 1rem;
-        width: 100%;
-        margin: 0.5rem 0;
-        padding: 0.75rem;
-      }
-
-      #siteLogo {
-        width: 64px;
-        height: auto;
-      }
-
-      .sideInputs {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .popupBox input {
-        width: 100%;
-      }
+      #siteLogo { width: 64px; height: auto; }
+      .sideInputs { flex-direction: column; gap: 0.5rem; }
+      .popupBox input { width: 100%; }
     }
 
     #siteFooter {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #d9d9d9;
-      margin-top: 2rem;
+      text-align: center; font-size: 0.9rem;
+      color: #d9d9d9; margin-top: 2rem;
     }
   </style>
 </head>
 <body>
 
-  <!-- 🛡️ Disclaimer Overlay -->
+  <!-- 🛡️ Legal Disclaimer -->
   <div id="disclaimerOverlay" class="dimOverlay" style="display: flex;">
     <div class="popupBox">
       <h2 style="font-family: 'Lilita One'; color: #d4af7f;">Legal Disclaimer</h2>
@@ -131,22 +88,21 @@
     </form>
   </div>
 
-  <!-- ⏱️ Timer Container -->
+  <!-- ⏱️ Timer -->
   <div id="globalClockContainer" style="display: none;"></div>
 
-  <!-- 📊 Main Gameplay -->
+  <!-- 🧮 Main Gameplay -->
   <div id="mainGameContainer"></div>
 
-  <!-- 🪄 Confirmation Popup -->
+  <!-- 🪄 Popup Overlays -->
   <div id="customPopupOverlay" class="dimOverlay">
     <div class="popupBox">
       <div id="customPopupMessage"></div>
-      <button id="customPopupYes">Yes</button>
+      <button id="customPopupYes">OK</button>
       <button id="customPopupNo">No</button>
     </div>
   </div>
 
-  <!-- 🔢 Input Popup -->
   <div id="customInputOverlay" class="dimOverlay">
     <div class="popupBox">
       <div id="customInputMessage"></div>
@@ -165,7 +121,7 @@
     </p>
   </div>
 
-  <!-- 🧠 Script -->
+  <!-- 🧠 Scripts -->
   <script src="script.js"></script>
   <script>
     window.addEventListener("load", function () {
