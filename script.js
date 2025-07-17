@@ -7,10 +7,10 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
   e.preventDefault();
   const entered = [...this.querySelectorAll("input[name='playerName']")].filter(input => input.value.trim());
 
-  if (entered.length < 2) return customPopup("You’ll need at least two players to invoke the spirit of capitalism.");
+  if (entered.length < 1) return customPopup("You’ll need at least one capitalist to get crushed.");
 
-  const invalidNames = entered.filter(input => !/^[A-Za-z\s]+$/.test(input.value.trim()));
-  if (invalidNames.length > 0) return customPopup("Player names must contain letters and spaces only.");
+  const invalidNames = entered.filter(input => !/^[A-Za-z]+(?:\s[A-Za-z]+)*$/.test(input.value.trim()));
+  if (invalidNames.length > 0) return customPopup("Player names must contain only letters and spaces.");
 
   players = entered.map(input => ({
     name: input.value.trim(),
@@ -24,8 +24,27 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
 
   document.getElementById("playerSetupBox").style.display = "none";
   document.getElementById("globalClockContainer").style.display = "block";
-  showStartOptions();
+
+  if (players.length === 1) {
+    initializeTurn();
+  } else {
+    showStartOptions();
+  }
 });
+
+function addPlayerField() {
+  const container = document.getElementById("playerInputFields");
+  const count = container.querySelectorAll("input").length + 1;
+  if (count > 7) return customPopup("Seven players is our legal max. Unless you wish to unionize.");
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.name = "playerName";
+  input.placeholder = `Player ${count} (optional)`;
+  input.pattern = "^[A-Za-z]+(?:\\s[A-Za-z]+)*$";
+  input.title = "Only letters and full words allowed";
+  container.appendChild(input);
+}
 
 function showStartOptions() {
   document.getElementById("mainGameContainer").innerHTML = `
@@ -93,11 +112,12 @@ function startTurn() {
 }
 
 function updateTimerDisplay() {
+  const buttonLabel = (timeLeft <= 0) ? "Restart Timer" : "Pause Timer";
   document.getElementById("globalClockContainer").innerHTML = `
     <h2 style="font-family:'Lilita One';">⏳ Player Timer</h2>
     <div style="display:flex; justify-content:center; align-items:center; gap:1rem;">
       <p id="playerTimer" style="font-family:'Lilita One'; font-size:2rem; color:#d4af7f;">${timeLeft}</p>
-      <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">Pause Timer</button>
+      <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">${buttonLabel}</button>
     </div>
   `;
 }
@@ -105,21 +125,32 @@ function updateTimerDisplay() {
 function decrementTimer() {
   timeLeft--;
   document.getElementById("playerTimer").innerText = timeLeft;
+
   if (timeLeft <= 0) {
     clearInterval(timerInterval);
     timerInterval = null;
+
     const btn = document.getElementById("pauseResumeBtn");
-    btn.innerText = "Restart Timer";
+    if (btn) btn.innerText = "Restart Timer";
 
     const overlay = document.getElementById("customPopupOverlay");
     const msg = document.getElementById("customPopupMessage");
     const yesBtn = document.getElementById("customPopupYes");
     const noBtn = document.getElementById("customPopupNo");
 
-    msg.innerHTML = `${players[currentPlayerIndex].name}'s time is up. What now?<br><br>
-      <button onclick="handleNextPlayer()">Next Player</button>
-      <button onclick="loadCharityEntry()">Record Charity Play</button>
-    `;
+    const name = players[currentPlayerIndex].name;
+    let popupHTML = `${name}'s time is up. What now?<br><br>`;
+
+    if (players.length === 1) {
+      popupHTML += `<button onclick="loadCharityEntry()">Record Charity Play</button>`;
+    } else {
+      popupHTML += `
+        <button onclick="handleNextPlayer()">Next Player</button>
+        <button onclick="loadCharityEntry()">Record Charity Play</button>
+      `;
+    }
+
+    msg.innerHTML = popupHTML;
     overlay.style.display = "flex";
     yesBtn.style.display = "none";
     noBtn.style.display = "none";
@@ -129,12 +160,11 @@ function decrementTimer() {
 function toggleTimer() {
   const btn = document.getElementById("pauseResumeBtn");
 
-  if (timeLeft <= 0) {
+  if (timeLeft <= 0 && btn.innerText === "Restart Timer") {
     timeLeft = 60;
     updateTimerDisplay();
     clearInterval(timerInterval);
     timerInterval = setInterval(decrementTimer, 1000);
-    btn.innerText = "Pause Timer";
     return;
   }
 
@@ -162,6 +192,7 @@ function loadCharityEntry() {
 function loadCalculator() {
   const p = players[currentPlayerIndex];
   updateTimerDisplay();
+
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
       <h2>${p.name}'s Turn</h2>
@@ -208,9 +239,7 @@ function calculate() {
         const afterCards = normalNum - beforeCards;
         p.progress += beforeCards;
 
-        if (p.progress < 5) {
-          p.progress = 0;
-        } else {
+        if (p.progress >= 5) {
           const completedBefore = Math.floor(p.progress / 5);
           p.streaks += completedBefore;
           p.progress = p.progress % 5;
@@ -218,8 +247,7 @@ function calculate() {
 
         p.progress = 0;
 
-        const msg = `Confirm how many cards were donated AFTER Charity (should be ${afterCards}):`;
-        customInputPopup(msg, function(afterConfirmed) {
+        customInputPopup(`Confirm how many cards were donated AFTER Charity (should be ${afterCards}):`, function(afterConfirmed) {
           if (afterConfirmed !== afterCards) {
             return customPopup("Mismatch. Please enter the correct remaining card amount.");
           }
@@ -347,10 +375,10 @@ function getTaxBracketMessage(coins) {
 function determineWinner() {
   const netWorths = players.map(p => p.coins - p.tax);
   const maxCoins = Math.max(...netWorths);
-    const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
+  const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
   const summary = document.getElementById("finalSummary");
 
-  if (contenders.length === 1) {
+   if (contenders.length === 1) {
     summary.innerHTML += `<p><strong><span style="color:#d4af7f;">${contenders[0].name} wins with ${maxCoins} Haggleoffs!</span></strong></p>`;
   } else {
     const maxProps = Math.max(...contenders.map(p => p.properties));
