@@ -9,7 +9,6 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
 
   if (entered.length < 1) return customPopup("You’ll need at least one capitalist to get crushed.");
 
-  // 🧹 No regex-based validation — fully unrestricted names
   players = entered.map(input => ({
     name: input.value.trim(),
     streaks: 0,
@@ -103,8 +102,8 @@ function startTurn() {
 function updateTimerDisplay() {
   const buttonLabel = (timeLeft <= 0) ? "Restart Timer" : "Pause Timer";
   document.getElementById("globalClockContainer").innerHTML = `
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-      <p id="playerTimer">${timeLeft}</p>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+      <p id="playerTimer" style="margin-bottom: 0.25rem;">${timeLeft}</p>
       <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">${buttonLabel}</button>
     </div>
   `;
@@ -206,7 +205,6 @@ function calculate() {
   const normalNum = /^\d+$/.test(normalVal) ? Number(normalVal) : 0;
   const powerNum = /^\d+$/.test(powerVal) ? Number(powerVal) : 0;
 
-  // 🧠 SKIP Charity prompt if no normal cards & no streaks in progress
   if (!interruptedChoice) {
     if (normalNum === 0 && p.progress === 0) {
       p.powerCards += powerNum;
@@ -225,7 +223,7 @@ function calculate() {
           return customPopup("Invalid number. Must be between 0 and total donated.");
         }
 
-        const afterCards = normalNum - beforeCards;
+                const afterCards = normalNum - beforeCards;
         p.progress += beforeCards;
 
         if (p.progress >= 5) {
@@ -260,7 +258,6 @@ function calculate() {
     loadCalculator();
   }
 
-  // 🧹 Optional input reset if staying on same view
   if (!players.length || players.length === 1) {
     document.getElementById("normal").value = "";
     document.getElementById("power").value = "";
@@ -380,13 +377,8 @@ function determineWinner() {
   }
 
   summary.innerHTML += `
-    <button onclick="restartGame()">PLAY AGAIN</button>
     <button onclick="exitToSetup()">EXIT</button>
   `;
-}
-
-function restartGame() {
-  showStartOptions();
 }
 
 function exitToSetup() {
@@ -449,7 +441,7 @@ function customInputPopup(message, callback) {
   overlay.style.display = "flex";
 
   submit.onclick = () => {
-    const val = Number(field.value.trim());
+        const val = Number(field.value.trim());
     if (!Number.isInteger(val) || val < 0) {
       overlay.style.display = "none";
       return customPopup("Please enter a valid whole number.");
