@@ -215,39 +215,39 @@ function calculate() {
   }
 
   if (interruptedChoice.value === "yes") {
-    if (p.progress > 0) p.progress = 0;
+  if (normalNum > 0) {
+    customInputPopup(`Of the ${normalNum} normal cards donated, how many were given BEFORE Charity was taken?`, function(beforeCards) {
+      if (!Number.isInteger(beforeCards) || beforeCards < 0 || beforeCards > normalNum) {
+        return customPopup("Invalid number. Must be between 0 and total donated.");
+      }
 
-    if (normalNum > 0) {
-      customInputPopup(`Of the ${normalNum} normal cards donated, how many were given BEFORE Charity was taken?`, function(beforeCards) {
-        if (!Number.isInteger(beforeCards) || beforeCards < 0 || beforeCards > normalNum) {
-          return customPopup("Invalid number. Must be between 0 and total donated.");
-        }
+      const afterCards = normalNum - beforeCards;
 
-                const afterCards = normalNum - beforeCards;
-        p.progress += beforeCards;
+      // Apply before-charity cards to current progress
+      p.progress += beforeCards;
+      if (p.progress >= 5) {
+        const completedBefore = Math.floor(p.progress / 5);
+        p.streaks += completedBefore;
+        p.progress = p.progress % 5;
+      }
 
-        if (p.progress >= 5) {
-          const completedBefore = Math.floor(p.progress / 5);
-          p.streaks += completedBefore;
-          p.progress = p.progress % 5;
-        }
+      // Reset streak for post-charity cards
+      p.progress = afterCards;
+      if (p.progress >= 5) {
+        const completedAfter = Math.floor(p.progress / 5);
+        p.streaks += completedAfter;
+        p.progress = p.progress % 5;
+      }
 
-        p.progress = afterCards;
-
-        if (p.progress >= 5) {
-          const completedAfter = Math.floor(p.progress / 5);
-          p.streaks += completedAfter;
-          p.progress = p.progress % 5;
-        }
-
-        p.powerCards += powerNum;
-        loadCalculator();
-      });
-    } else {
-      p.progress = 0;
       p.powerCards += powerNum;
       loadCalculator();
-    }
+    });
+  } else {
+    // No cards donated, so reset progress
+    p.progress = 0;
+    p.powerCards += powerNum;
+    loadCalculator();
+  }
   } else {
     p.progress += normalNum;
     const completedStreaks = Math.floor(p.progress / 5);
@@ -477,12 +477,18 @@ function customHTMLPopup(message, html, callback) {
 }
 
 function renderCardProgress(progress) {
-  if (progress === 0) return `<pre style="color:#d4af7f;">┌─┐\n│0│\n└─┘</pre>`;
-  let top = "", mid = "", bot = "";
-  for (let i = 1; i <= progress; i++) {
-    top += "┌─┐ ";
-    mid += `│${i}│ `;
-    bot += "└─┘ ";
+  if (progress === 0) return "";
+
+  let blocks = "";
+  for (let i = 0; i < progress; i++) {
+    blocks += `<div style="
+      width: 24px;
+      height: 36px;
+      background-color: #d4af7f;
+      margin: 0 3px;
+      border-radius: 6px;">
+    </div>`;
   }
-  return `<pre style="color:#d4af7f;">${top.trim()}\n${mid.trim()}\n${bot.trim()}</pre>`;
+
+  return `<div style="display: flex; justify-content: center; margin-top: 1rem;">${blocks}</div>`;
 }
