@@ -23,7 +23,6 @@
     .flicker-start {
       animation: flickerTax404 2.5s ease-in-out;
     }
-
     @media screen and (max-width: 600px) {
       body { padding: 1rem; box-sizing: border-box; }
       #siteHeader, .calculatorBox, .popupBox {
@@ -38,11 +37,10 @@
       button, .popupBox button, button.styled-btn {
         font-size: 1rem; width: 100%; margin: 0.5rem 0; padding: 0.75rem;
       }
-      #siteLogo { width: 64px; height: auto; }
+      #siteLogo { width: 160px; height: 80px; object-fit: contain; }
       .sideInputs { flex-direction: column; gap: 0.5rem; }
       .popupBox input { width: 100%; }
     }
-
     #siteFooter {
       text-align: center; font-size: 0.9rem;
       color: #d9d9d9; margin-top: 2rem;
@@ -80,7 +78,7 @@
     <form id="playerForm" class="calculatorBox">
       <h2 style="font-family: 'Lilita One'; color: #d4af7f;">Enter Player Names</h2>
       <div id="playerInputFields">
-        <input type="text" name="playerName" pattern="^[A-Za-z]+(?:\\s[A-Za-z]+)*$" title="Only letters and full words allowed" placeholder="Player 1 (required)" required />
+        <input type="text" name="playerName" placeholder="Player 1 (required)" required />
       </div>
       <button type="button" onclick="addPlayerField()">+ Add Player</button>
       <br><br>
@@ -144,8 +142,6 @@
       input.type = "text";
       input.name = "playerName";
       input.placeholder = `Player ${count} (optional)`;
-      input.pattern = "^[A-Za-z]+(?:\\s[A-Za-z]+)*$";
-      input.title = "Only letters and full words allowed";
       container.appendChild(input);
     }
   </script>

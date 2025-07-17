@@ -9,9 +9,6 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
 
   if (entered.length < 1) return customPopup("You’ll need at least one capitalist to get crushed.");
 
-  const invalidNames = entered.filter(input => !/^[A-Za-z]+(?:\s[A-Za-z]+)*$/.test(input.value.trim()));
-  if (invalidNames.length > 0) return customPopup("Player names must contain only letters and spaces.");
-
   players = entered.map(input => ({
     name: input.value.trim(),
     streaks: 0,
@@ -43,8 +40,6 @@ function addPlayerField() {
   input.type = "text";
   input.name = "playerName";
   input.placeholder = `Player ${count} (optional)`;
-  input.pattern = "^[A-Za-z]+(?:\\s[A-Za-z]+)*$";
-  input.title = "Only letters and full words allowed";
   container.appendChild(input);
 }
 
