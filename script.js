@@ -9,6 +9,7 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
 
   if (entered.length < 1) return customPopup("You’ll need at least one capitalist to get crushed.");
 
+  // 🧹 No regex-based validation — fully unrestricted names
   players = entered.map(input => ({
     name: input.value.trim(),
     streaks: 0,
@@ -31,19 +32,10 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
   }
 });
 
-function addPlayerField() {
-  const container = document.getElementById("playerInputFields");
-  const count = container.querySelectorAll("input").length + 1;
-  if (count > 7) return customPopup("Seven players is our legal max. Unless you wish to unionize.");
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.name = "playerName";
-  input.placeholder = `Player ${count} (optional)`;
-  container.appendChild(input);
-}
+let cachedDropdownHTML = "";
 
 function showStartOptions() {
+  cachedDropdownHTML = buildPlayerDropdownHTML();
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
       <h2>Choose Starting Player</h2>
@@ -60,7 +52,7 @@ function buildPlayerDropdownHTML() {
 }
 
 function manualStarter() {
-  const html = buildPlayerDropdownHTML() + `<br><br><button onclick="confirmManualStarter()">Confirm</button>`;
+  const html = cachedDropdownHTML + `<br><br><button onclick="confirmManualStarter()">Confirm</button>`;
   customHTMLPopup("Select starting player:", html, () => {});
 }
 
@@ -112,8 +104,8 @@ function updateTimerDisplay() {
   const buttonLabel = (timeLeft <= 0) ? "Restart Timer" : "Pause Timer";
   document.getElementById("globalClockContainer").innerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-      <p id="playerTimer" style="font-family: 'Lilita One'; font-size: 2.5rem; color: #d4af7f; margin: 0;">${timeLeft}</p>
-      <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()" style="margin: 0;">${buttonLabel}</button>
+      <p id="playerTimer">${timeLeft}</p>
+      <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">${buttonLabel}</button>
     </div>
   `;
 }
@@ -187,7 +179,7 @@ function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
       <h2>${p.name}'s Turn</h2>
-      ${players.length > 1 ? `<p>Select Next Player: ${buildPlayerDropdownHTML()}</p>` : ""}
+      ${players.length > 1 ? `<p>Select Next Player: ${cachedDropdownHTML}</p>` : ""}
       <div id="tallyProgress">${renderCardProgress(p.progress)}</div>
       <p>Completed Streaks: <span id="streaks">${p.streaks}</span></p>
       <p>Total Power Cards Donated: <span id="powers">${p.powerCards}</span></p>
@@ -214,7 +206,15 @@ function calculate() {
   const normalNum = /^\d+$/.test(normalVal) ? Number(normalVal) : 0;
   const powerNum = /^\d+$/.test(powerVal) ? Number(powerVal) : 0;
 
-  if (!interruptedChoice) return customPopup("Please select whether Charity was taken this round.");
+  // 🧠 SKIP Charity prompt if no normal cards & no streaks in progress
+  if (!interruptedChoice) {
+    if (normalNum === 0 && p.progress === 0) {
+      p.powerCards += powerNum;
+      loadCalculator();
+      return;
+    }
+    return customPopup("Please select whether Charity was taken this round.");
+  }
 
   if (interruptedChoice.value === "yes") {
     if (p.progress > 0) p.progress = 0;
@@ -234,20 +234,16 @@ function calculate() {
           p.progress = p.progress % 5;
         }
 
-        p.progress = 0;
+        p.progress = afterCards;
 
-        customInputPopup(`Confirm how many cards were donated AFTER Charity (should be ${afterCards}):`, function(afterConfirmed) {
-          if (afterConfirmed !== afterCards) {
-            return customPopup("Mismatch. Please enter the correct remaining card amount.");
-          }
-
-          const completedAfter = Math.floor(afterConfirmed / 5);
+        if (p.progress >= 5) {
+          const completedAfter = Math.floor(p.progress / 5);
           p.streaks += completedAfter;
-          p.progress = afterConfirmed % 5;
+          p.progress = p.progress % 5;
+        }
 
-          p.powerCards += powerNum;
-          loadCalculator();
-        });
+        p.powerCards += powerNum;
+        loadCalculator();
       });
     } else {
       p.progress = 0;
@@ -264,9 +260,12 @@ function calculate() {
     loadCalculator();
   }
 
-  document.getElementById("normal").value = "";
-  document.getElementById("power").value = "";
-  document.querySelectorAll('input[name="interrupted"]').forEach(el => el.checked = false);
+  // 🧹 Optional input reset if staying on same view
+  if (!players.length || players.length === 1) {
+    document.getElementById("normal").value = "";
+    document.getElementById("power").value = "";
+    document.querySelectorAll('input[name="interrupted"]').forEach(el => el.checked = false);
+  }
 }
 
 function showEndgame() {
