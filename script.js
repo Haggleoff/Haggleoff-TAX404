@@ -1,3 +1,4 @@
+//Globals & Player Form Submission
 let players = [];
 let currentPlayerIndex = 0;
 let timerInterval = null;
@@ -46,6 +47,7 @@ function addPlayerField() {
   container.appendChild(input);
 }
 
+//Player Selection Flow
 function showStartOptions() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
@@ -99,6 +101,7 @@ function randomStarter() {
   }, 3000);
 }
 
+//Timer Mechanics
 function initializeTurn() {
   loadCalculator();
   startTurn();
@@ -114,10 +117,9 @@ function startTurn() {
 function updateTimerDisplay() {
   const buttonLabel = (timeLeft <= 0) ? "Restart Timer" : "Pause Timer";
   document.getElementById("globalClockContainer").innerHTML = `
-    <h2 style="font-family:'Lilita One';">⏳ Player Timer</h2>
-    <div style="display:flex; justify-content:center; align-items:center; gap:1rem;">
-      <p id="playerTimer" style="font-family:'Lilita One'; font-size:2rem; color:#d4af7f;">${timeLeft}</p>
-      <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">${buttonLabel}</button>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+      <p id="playerTimer" style="font-family: 'Lilita One'; font-size: 2.5rem; color: #d4af7f; margin: 0;">${timeLeft}</p>
+      <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()" style="margin: 0;">${buttonLabel}</button>
     </div>
   `;
 }
@@ -129,7 +131,6 @@ function decrementTimer() {
   if (timeLeft <= 0) {
     clearInterval(timerInterval);
     timerInterval = null;
-
     const btn = document.getElementById("pauseResumeBtn");
     if (btn) btn.innerText = "Restart Timer";
 
@@ -140,15 +141,10 @@ function decrementTimer() {
 
     const name = players[currentPlayerIndex].name;
     let popupHTML = `${name}'s time is up. What now?<br><br>`;
-
-    if (players.length === 1) {
-      popupHTML += `<button onclick="loadCharityEntry()">Record Charity Play</button>`;
-    } else {
-      popupHTML += `
-        <button onclick="handleNextPlayer()">Next Player</button>
-        <button onclick="loadCharityEntry()">Record Charity Play</button>
-      `;
-    }
+    popupHTML += (players.length === 1)
+      ? `<button onclick="loadCharityEntry()">Record Moves</button>`
+      : `<button onclick="handleNextPlayer()">Next Player</button>
+         <button onclick="loadCharityEntry()">Record Moves</button>`;
 
     msg.innerHTML = popupHTML;
     overlay.style.display = "flex";
@@ -159,7 +155,6 @@ function decrementTimer() {
 
 function toggleTimer() {
   const btn = document.getElementById("pauseResumeBtn");
-
   if (timeLeft <= 0 && btn.innerText === "Restart Timer") {
     timeLeft = 60;
     updateTimerDisplay();
@@ -189,6 +184,7 @@ function loadCharityEntry() {
   loadCalculator();
 }
 
+//Main Gameplay UI
 function loadCalculator() {
   const p = players[currentPlayerIndex];
   updateTimerDisplay();
@@ -196,7 +192,7 @@ function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
       <h2>${p.name}'s Turn</h2>
-      <p>Select Next Player: ${buildPlayerDropdownHTML()}</p>
+      ${players.length > 1 ? `<p>Select Next Player: ${buildPlayerDropdownHTML()}</p>` : ""}
       <div id="tallyProgress">${renderCardProgress(p.progress)}</div>
       <p>Completed Streaks: <span id="streaks">${p.streaks}</span></p>
       <p>Total Power Cards Donated: <span id="powers">${p.powerCards}</span></p>
@@ -208,12 +204,13 @@ function loadCalculator() {
       <label><input type="radio" name="interrupted" value="yes"> Yes</label>
       <label><input type="radio" name="interrupted" value="no"> No</label><br>
       <p style="font-family:'Lilita One'; color:#d4af7f;">Tax Breaks Earned: ${p.streaks + p.powerCards}</p>
-      <button onclick="calculate()">Update Charity Play</button>
+      <button onclick="calculate()">Confirm Moves</button>
       <button onclick="showEndgame()">Endgame Taxes</button>
     </div>
   `;
 }
 
+//Charity Play Logic
 function calculate() {
   const normalVal = document.getElementById("normal").value.trim();
   const powerVal = document.getElementById("power").value.trim();
@@ -280,6 +277,7 @@ function calculate() {
   document.querySelectorAll('input[name="interrupted"]').forEach(el => el.checked = false);
 }
 
+//Endgame Scoring & Results
 function showEndgame() {
   customPopup("Is the game over? Ready for final taxes?", function(confirm) {
     if (confirm) loadEndgame();
@@ -312,6 +310,7 @@ function loadEndgame() {
   `;
 }
 
+//Tax Calculations & Winner Reveal
 function calculateFinalTaxes() {
   const summary = document.getElementById("finalSummary");
   summary.style.display = "block";
@@ -378,7 +377,7 @@ function determineWinner() {
   const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
   const summary = document.getElementById("finalSummary");
 
-   if (contenders.length === 1) {
+  if (contenders.length === 1) {
     summary.innerHTML += `<p><strong><span style="color:#d4af7f;">${contenders[0].name} wins with ${maxCoins} Haggleoffs!</span></strong></p>`;
   } else {
     const maxProps = Math.max(...contenders.map(p => p.properties));
@@ -397,6 +396,7 @@ function determineWinner() {
   `;
 }
 
+//Navigation & Game Reset
 function restartGame() {
   showStartOptions();
 }
@@ -419,6 +419,7 @@ function backToNameInput() {
   currentPlayerIndex = 0;
 }
 
+//Popups & Interactive Overlays
 function customPopup(message, callback) {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
@@ -496,6 +497,7 @@ function customHTMLPopup(message, html, callback) {
   if (typeof callback === "function") callback();
 }
 
+//Card Progress Renderer
 function renderCardProgress(progress) {
   if (progress === 0) return `<pre style="color:#d4af7f;">┌─┐\n│0│\n└─┘</pre>`;
   let top = "", mid = "", bot = "";
