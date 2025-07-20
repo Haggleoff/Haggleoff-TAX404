@@ -232,7 +232,8 @@ button.styled-btn,
   }
 
   #siteLogo {
-    width: 64px;
+    width: 30vw;
+    max-width: 160px;
     height: auto;
   }
 
