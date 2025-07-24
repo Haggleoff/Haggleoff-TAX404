@@ -43,6 +43,7 @@ function showStartOptions() {
 }
 
 function buildPlayerDropdownHTML() {
+  // Note: <option> elements cannot have HTML, so styling is limited for dropdowns.
   return `<select id="playerSelector" onchange="handlePlayerSwitch(this)">
     ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
   </select>`;
@@ -65,7 +66,7 @@ function handlePlayerSwitch(el) {
   if (selectedIndex === currentPlayerIndex) return;
 
   customPopup(
-    `End ${players[currentPlayerIndex].name}'s turn and switch to ${players[selectedIndex].name}?`, 
+    `End <span class="player-name">${players[currentPlayerIndex].name}</span>'s turn and switch to <span class="player-name">${players[selectedIndex].name}</span>?`, 
     function(confirm) {
       if (confirm) {
         currentPlayerIndex = selectedIndex;
@@ -73,7 +74,8 @@ function handlePlayerSwitch(el) {
       } else {
         el.value = currentPlayerIndex;
       }
-    }
+    },
+    true // indicate HTML message
   );
 }
 
@@ -90,7 +92,7 @@ function randomStarter() {
     document.getElementById("mainGameContainer").innerHTML = `
       <div class="calculatorBox">
         <h2>🎉 Starting Player is...</h2>
-        <h1 style="color:#d4af7f">${name}</h1>
+        <h1><span class="player-name">${name}</span></h1>
         <button onclick="initializeTurn()">START</button>
       </div>
     `;
@@ -126,7 +128,8 @@ function getTimerHTML() {
 function updateTimerDisplay() {
   // Only update timer in player turn (not in endgame)
   const mainGame = document.getElementById("mainGameContainer");
-  if (!mainGame.innerHTML.includes(`${players[currentPlayerIndex].name}'s Turn`)) {
+  if (!mainGame.innerHTML.includes(`${players[currentPlayerIndex].name}'s Turn`) &&
+      !mainGame.innerHTML.includes(`<span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn`)) {
     // Not in player turn section, nothing to update
     return;
   }
@@ -154,7 +157,7 @@ function endTimer() {
 
   if (players.length && typeof currentPlayerIndex === "number" && players[currentPlayerIndex]) {
     const name = players[currentPlayerIndex].name;
-    let popupHTML = `${name}'s time is up. What now?<br><br>`;
+    let popupHTML = `<span class="player-name">${name}</span>'s time is up. What now?<br><br>`;
     popupHTML += (players.length === 1)
       ? `<button onclick="loadCharityEntry()">Record Moves</button>`
       : `<button onclick="handleNextPlayer()">Next Player</button>
@@ -206,7 +209,7 @@ function decrementTimer() {
     const noBtn = document.getElementById("customPopupNo");
 
     const name = players[currentPlayerIndex].name;
-    let popupHTML = `${name}'s time is up. What now?<br><br>`;
+    let popupHTML = `<span class="player-name">${name}</span>'s time is up. What now?<br><br>`;
     popupHTML += (players.length === 1)
       ? `<button onclick="loadCharityEntry()">Record Moves</button>`
       : `<button onclick="handleNextPlayer()">Next Player</button>
@@ -233,7 +236,7 @@ function loadCharityEntry() {
 function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
-      <h2>${players[currentPlayerIndex].name}'s Turn</h2>
+      <h2><span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn</h2>
       <div id="embeddedTimer">${getTimerHTML()}</div>
       ${players.length > 1 ? `<p>Select Next Player: ${cachedDropdownHTML}</p>` : ""}
       <div id="tallyProgress">${renderCardProgress(players[currentPlayerIndex].progress)}</div>
@@ -334,7 +337,7 @@ function loadEndgame() {
   timerInterval = null;
   let blocks = players.map((p, i) => `
     <div class="playerEndgameBlock">
-      <h3>${p.name}</h3>
+      <h3><span class="player-name">${p.name}</span></h3>
       <div class="sideInputs">
         <input type="number" id="coins_${i}" min="0" step="1" placeholder="Haggleoffs">
         <input type="number" id="props_${i}" min="1" step="1" placeholder="Properties">
@@ -379,8 +382,7 @@ function calculateFinalTaxes() {
       const afterRate = p.coins ? Math.round((p.tax / p.coins) * 100) : 0;
 
       summary.innerHTML += `
-        <p><span style="font-family:'Lilita One'; color:#d4af7f;">
-          ${p.name} — ${p.tax} Haggleoffs Tax Owed</span><br>
+        <p><span class="player-name">${p.name}</span> — ${p.tax} Haggleoffs Tax Owed<br>
           Coins: ${p.coins}, Properties: ${p.properties}<br>
           Effective Rate: ${beforeRate}% → ${afterRate}%<br>
           Tax Avoided: ${avoided}<br>
@@ -420,14 +422,14 @@ function determineWinner() {
   const summary = document.getElementById("finalSummary");
 
   if (contenders.length === 1) {
-    summary.innerHTML += `<p><strong><span style="color:#d4af7f;">${contenders[0].name} wins with ${maxCoins} Haggleoffs!</span></strong></p>`;
+    summary.innerHTML += `<p><strong><span class="player-name">${contenders[0].name}</span> wins with ${maxCoins} Haggleoffs!</strong></p>`;
   } else {
     const maxProps = Math.max(...contenders.map(p => p.properties));
     const tied = contenders.filter(p => p.properties === maxProps);
     if (tied.length === 1) {
-      summary.innerHTML += `<p><strong><span style="color:#d4af7f;">${tied[0].name} wins by owning more properties!</span></strong></p>`;
+      summary.innerHTML += `<p><strong><span class="player-name">${tied[0].name}</span> wins by owning more properties!</strong></p>`;
     } else {
-      const names = tied.map(p => p.name).join(", ");
+      const names = tied.map(p => `<span class="player-name">${p.name}</span>`).join(", ");
       summary.innerHTML += `<p><strong><span style="color:#d4af7f;">There are no winners—just shareholders.</span></strong><br>Tied players: ${names}</p>`;
     }
   }
@@ -453,13 +455,17 @@ function backToNameInput() {
   currentPlayerIndex = 0;
 }
 
-function customPopup(message, callback) {
+function customPopup(message, callback, isHtml = false) {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
   const yesBtn = document.getElementById("customPopupYes");
   const noBtn = document.getElementById("customPopupNo");
 
-  msg.innerText = message;
+  if (isHtml) {
+    msg.innerHTML = message;
+  } else {
+    msg.innerText = message;
+  }
   overlay.style.display = "flex";
 
   if (typeof callback !== "function") {

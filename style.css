@@ -242,3 +242,10 @@ input[type="number"]:focus, input[type="text"]:focus {
     width: 100%;
   }
 }
+
+/* Player Name Styling */
+.player-name {
+  font-family: 'Lilita One', cursive;
+  color: #d4af7f !important;
+  font-weight: normal !important;
+}
