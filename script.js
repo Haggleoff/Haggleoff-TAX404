@@ -20,8 +20,6 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
   }));
 
   document.getElementById("playerSetupBox").style.display = "none";
-  document.getElementById("globalClockContainer").style.display = "block";
-
   customPopup("Reloading this page will reset your progress.");
 
   if (players.length === 1) {
@@ -63,8 +61,20 @@ function confirmManualStarter() {
 }
 
 function handlePlayerSwitch(el) {
-  currentPlayerIndex = Number(el.value);
-  loadCalculator();
+  const selectedIndex = Number(el.value);
+  if (selectedIndex === currentPlayerIndex) return;
+
+  customPopup(
+    `End ${players[currentPlayerIndex].name}'s turn and switch to ${players[selectedIndex].name}?`, 
+    function(confirm) {
+      if (confirm) {
+        currentPlayerIndex = selectedIndex;
+        initializeTurn();
+      } else {
+        el.value = currentPlayerIndex;
+      }
+    }
+  );
 }
 
 function randomStarter() {
@@ -99,20 +109,68 @@ function startTurn() {
   timerInterval = setInterval(decrementTimer, 1000);
 }
 
-function updateTimerDisplay() {
-  const buttonLabel = (timeLeft <= 0) ? "Restart Timer" : "Pause Timer";
-  document.getElementById("globalClockContainer").innerHTML = `
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
-      <p id="playerTimer" style="margin-bottom: 0.25rem;">${timeLeft}</p>
-      <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">${buttonLabel}</button>
+function getTimerHTML() {
+  const buttonLabel = (timeLeft <= 0) ? "Restart" : "Pause";
+  const showEndBtn = (timeLeft > 0);
+  return `
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin-bottom: 1rem;">
+      <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">${timeLeft}</p>
+      <div style="display:flex; gap:0.5rem;">
+        <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">${buttonLabel}</button>
+        ${showEndBtn ? `<button id="endTimerBtn" class="styled-btn" onclick="endTimer()">End</button>` : ""}
+      </div>
     </div>
   `;
+}
+
+function updateTimerDisplay() {
+  // Only update timer in player turn (not in endgame)
+  const mainGame = document.getElementById("mainGameContainer");
+  if (!mainGame.innerHTML.includes(`${players[currentPlayerIndex].name}'s Turn`)) {
+    // Not in player turn section, nothing to update
+    return;
+  }
+  // Update timer display inside the player calculator box
+  const timerDiv = document.getElementById("embeddedTimer");
+  if (timerDiv) {
+    timerDiv.innerHTML = getTimerHTML();
+  }
+}
+
+function endTimer() {
+  timeLeft = 0;
+  clearInterval(timerInterval);
+  timerInterval = null;
+
+  updateTimerDisplay();
+
+  const btn = document.getElementById("pauseResumeBtn");
+  if (btn) btn.innerText = "Restart";
+
+  const overlay = document.getElementById("customPopupOverlay");
+  const msg = document.getElementById("customPopupMessage");
+  const yesBtn = document.getElementById("customPopupYes");
+  const noBtn = document.getElementById("customPopupNo");
+
+  if (players.length && typeof currentPlayerIndex === "number" && players[currentPlayerIndex]) {
+    const name = players[currentPlayerIndex].name;
+    let popupHTML = `${name}'s time is up. What now?<br><br>`;
+    popupHTML += (players.length === 1)
+      ? `<button onclick="loadCharityEntry()">Record Moves</button>`
+      : `<button onclick="handleNextPlayer()">Next Player</button>
+         <button onclick="loadCharityEntry()">Record Moves</button>`;
+
+    msg.innerHTML = popupHTML;
+    overlay.style.display = "flex";
+    yesBtn.style.display = "none";
+    noBtn.style.display = "none";
+  }
 }
 
 function toggleTimer() {
   const btn = document.getElementById("pauseResumeBtn");
 
-  if (timeLeft <= 0 && btn.innerText === "Restart Timer") {
+  if (timeLeft <= 0 && btn.innerText === "Restart") {
     timeLeft = 60;
     updateTimerDisplay();
     clearInterval(timerInterval);
@@ -120,26 +178,27 @@ function toggleTimer() {
     return;
   }
 
-  if (btn.innerText === "Pause Timer") {
+  if (btn.innerText === "Pause") {
     clearInterval(timerInterval);
     timerInterval = null;
-    btn.innerText = "Resume Timer";
+    btn.innerText = "Resume";
   } else {
     timerInterval = setInterval(decrementTimer, 1000);
-    btn.innerText = "Pause Timer";
+    btn.innerText = "Pause";
   }
 }
 
 function decrementTimer() {
   timeLeft--;
-  document.getElementById("playerTimer").innerText = timeLeft;
+  const timerEl = document.getElementById("playerTimer");
+  if (timerEl) timerEl.innerText = timeLeft;
 
   if (timeLeft <= 0) {
     clearInterval(timerInterval);
     timerInterval = null;
 
     const btn = document.getElementById("pauseResumeBtn");
-    if (btn) btn.innerText = "Restart Timer";
+    if (btn) btn.innerText = "Restart";
 
     const overlay = document.getElementById("customPopupOverlay");
     const msg = document.getElementById("customPopupMessage");
@@ -172,16 +231,14 @@ function loadCharityEntry() {
 }
 
 function loadCalculator() {
-  const p = players[currentPlayerIndex];
-  updateTimerDisplay();
-
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
-      <h2>${p.name}'s Turn</h2>
+      <h2>${players[currentPlayerIndex].name}'s Turn</h2>
+      <div id="embeddedTimer">${getTimerHTML()}</div>
       ${players.length > 1 ? `<p>Select Next Player: ${cachedDropdownHTML}</p>` : ""}
-      <div id="tallyProgress">${renderCardProgress(p.progress)}</div>
-      <p>Completed Streaks: <span id="streaks">${p.streaks}</span></p>
-      <p>Total Power Cards Donated: <span id="powers">${p.powerCards}</span></p>
+      <div id="tallyProgress">${renderCardProgress(players[currentPlayerIndex].progress)}</div>
+      <p>Completed Streaks: <span id="streaks">${players[currentPlayerIndex].streaks}</span></p>
+      <p>Total Power Cards Donated: <span id="powers">${players[currentPlayerIndex].powerCards}</span></p>
       <label>Normal Cards Donated (this round):</label>
       <input type="number" id="normal" min="0" step="1"><br>
       <label>Power Cards Donated (this round):</label>
@@ -189,11 +246,12 @@ function loadCalculator() {
       <p>Did you take from Charity (this round)?</p>
       <label><input type="radio" name="interrupted" value="yes"> Yes</label>
       <label><input type="radio" name="interrupted" value="no"> No</label><br>
-      <p style="font-family:'Lilita One'; color:#d4af7f;">Tax Breaks Earned: ${p.streaks + p.powerCards}</p>
+      <p style="font-family:'Lilita One'; color:#d4af7f;">Tax Breaks Earned: ${players[currentPlayerIndex].streaks + players[currentPlayerIndex].powerCards}</p>
       <button onclick="calculate()">Confirm Moves</button>
       <button onclick="showEndgame()">Endgame Taxes</button>
     </div>
   `;
+  // Timer is now managed inside the calculator box
 }
 
 function calculate() {
@@ -215,39 +273,39 @@ function calculate() {
   }
 
   if (interruptedChoice.value === "yes") {
-  if (normalNum > 0) {
-    customInputPopup(`Of the ${normalNum} normal cards donated, how many were given BEFORE Charity was taken?`, function(beforeCards) {
-      if (!Number.isInteger(beforeCards) || beforeCards < 0 || beforeCards > normalNum) {
-        return customPopup("Invalid number. Must be between 0 and total donated.");
-      }
+    if (normalNum > 0) {
+      customInputPopup(`Of the ${normalNum} normal cards donated, how many were given BEFORE Charity was taken?`, function(beforeCards) {
+        if (!Number.isInteger(beforeCards) || beforeCards < 0 || beforeCards > normalNum) {
+          return customPopup("Invalid number. Must be between 0 and total donated.");
+        }
 
-      const afterCards = normalNum - beforeCards;
+        const afterCards = normalNum - beforeCards;
 
-      // Apply before-charity cards to current progress
-      p.progress += beforeCards;
-      if (p.progress >= 5) {
-        const completedBefore = Math.floor(p.progress / 5);
-        p.streaks += completedBefore;
-        p.progress = p.progress % 5;
-      }
+        // Apply before-charity cards to current progress
+        p.progress += beforeCards;
+        if (p.progress >= 5) {
+          const completedBefore = Math.floor(p.progress / 5);
+          p.streaks += completedBefore;
+          p.progress = p.progress % 5;
+        }
 
-      // Reset streak for post-charity cards
-      p.progress = afterCards;
-      if (p.progress >= 5) {
-        const completedAfter = Math.floor(p.progress / 5);
-        p.streaks += completedAfter;
-        p.progress = p.progress % 5;
-      }
+        // Reset streak for post-charity cards
+        p.progress = afterCards;
+        if (p.progress >= 5) {
+          const completedAfter = Math.floor(p.progress / 5);
+          p.streaks += completedAfter;
+          p.progress = p.progress % 5;
+        }
 
+        p.powerCards += powerNum;
+        loadCalculator();
+      });
+    } else {
+      // No cards donated, so reset progress
+      p.progress = 0;
       p.powerCards += powerNum;
       loadCalculator();
-    });
-  } else {
-    // No cards donated, so reset progress
-    p.progress = 0;
-    p.powerCards += powerNum;
-    loadCalculator();
-  }
+    }
   } else {
     p.progress += normalNum;
     const completedStreaks = Math.floor(p.progress / 5);
@@ -274,8 +332,6 @@ function showEndgame() {
 function loadEndgame() {
   clearInterval(timerInterval);
   timerInterval = null;
-  document.getElementById("playerTimer").innerText = "–";
-
   let blocks = players.map((p, i) => `
     <div class="playerEndgameBlock">
       <h3>${p.name}</h3>
@@ -388,13 +444,11 @@ function exitToSetup() {
       <button onclick="backToNameInput()">Enter New Players</button>
     </div>
   `;
-  document.getElementById("globalClockContainer").style.display = "none";
 }
 
 function backToNameInput() {
   document.getElementById("playerSetupBox").style.display = "block";
   document.getElementById("mainGameContainer").innerHTML = "";
-  document.getElementById("globalClockContainer").innerHTML = "";
   players = [];
   currentPlayerIndex = 0;
 }
@@ -441,7 +495,7 @@ function customInputPopup(message, callback) {
   overlay.style.display = "flex";
 
   submit.onclick = () => {
-        const val = Number(field.value.trim());
+    const val = Number(field.value.trim());
     if (!Number.isInteger(val) || val < 0) {
       overlay.style.display = "none";
       return customPopup("Please enter a valid whole number.");
