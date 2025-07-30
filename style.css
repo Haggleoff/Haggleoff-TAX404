@@ -184,6 +184,21 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-top: 0.7rem;
 }
 
+/* Popup buttons vertical stacking for clarity */
+.popupBox .styled-btn,
+.popupBox button {
+  display: block;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#customPopupYes,
+#customPopupNo,
+#endgameFromTurn {
+  width: 100%;
+}
+
 /* 📱 Smartphone Optimization */
 @media screen and (max-width: 600px) {
   body {

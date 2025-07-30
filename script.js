@@ -43,7 +43,6 @@ function showStartOptions() {
 }
 
 function buildPlayerDropdownHTML() {
-  // Note: <option> elements cannot have HTML, so styling is limited for dropdowns.
   return `<select id="playerSelector" onchange="handlePlayerSwitch(this)">
     ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
   </select>`;
@@ -75,7 +74,7 @@ function handlePlayerSwitch(el) {
         el.value = currentPlayerIndex;
       }
     },
-    true // indicate HTML message
+    true
   );
 }
 
@@ -100,236 +99,258 @@ function randomStarter() {
 }
 
 function initializeTurn() {
-  loadCalculator();
-  startTurn();
+  showDonateOrCharityPopup();
 }
 
-function startTurn() {
-  timeLeft = 60;
-  updateTimerDisplay();
-  clearInterval(timerInterval);
-  timerInterval = setInterval(decrementTimer, 1000);
-}
+function showDonateOrCharityPopup() {
+  const player = players[currentPlayerIndex];
+  const titleRowHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.5rem;">
+      <span class="player-name">${player.name}</span>'s Turn.
+      ${
+        players.length > 1
+          ? `<button id="popupPickPlayerBtn" class="styled-btn" style="margin-left:0.25rem;">Pick Player</button>
+             <span id="popupDropdownContainer" style="display:none; margin-left:0.5rem;"></span>`
+          : ""
+      }
+    </div>
+  `;
 
-function getTimerHTML() {
-  const buttonLabel = (timeLeft <= 0) ? "Restart" : "Pause";
-  const showEndBtn = (timeLeft > 0);
-  return `
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin-bottom: 1rem;">
-      <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">${timeLeft}</p>
+  // Timer HTML (do not auto-start; button says Start Timer)
+  const timerHTML = `
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 1rem 0 1rem 0;">
+      <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">60</p>
       <div style="display:flex; gap:0.5rem;">
-        <button id="pauseResumeBtn" class="styled-btn" onclick="toggleTimer()">${buttonLabel}</button>
-        ${showEndBtn ? `<button id="endTimerBtn" class="styled-btn" onclick="endTimer()">End</button>` : ""}
+        <button id="pauseResumeBtn" class="styled-btn">Start Timer</button>
       </div>
     </div>
   `;
-}
 
-function updateTimerDisplay() {
-  // Only update timer in player turn (not in endgame)
-  const mainGame = document.getElementById("mainGameContainer");
-  if (!mainGame.innerHTML.includes(`${players[currentPlayerIndex].name}'s Turn`) &&
-      !mainGame.innerHTML.includes(`<span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn`)) {
-    // Not in player turn section, nothing to update
-    return;
-  }
-  // Update timer display inside the player calculator box
-  const timerDiv = document.getElementById("embeddedTimer");
-  if (timerDiv) {
-    timerDiv.innerHTML = getTimerHTML();
-  }
-}
+  const streakProgressHTML = `
+    <div style="margin-bottom:1rem;">
+      <strong>Current Streak Progress:</strong>
+      ${renderCardProgress(player.progress) || "<span style='color:#bbb;'>No cards in streak.</span>"}
+      <br>
+      <span style="font-family:'Lilita One'; color:#d4af7f;">
+        Tax Breaks Earned: ${player.streaks + player.powerCards}
+      </span>
+    </div>
+  `;
 
-function endTimer() {
-  timeLeft = 0;
+  // Main popup content
+  const popupContent = `
+    ${titleRowHTML}
+    ${timerHTML}
+    Did <span class="player-name">${player.name}</span> <strong>Donate</strong> or <strong>Take Charity</strong>?<br><br>
+    ${streakProgressHTML}
+    <div id="endgameBtnContainer"></div>
+  `;
+
+  // Use custom labels for Donate/Took Charity here
+  customPopup(
+    popupContent,
+    function(choice) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      if (choice === true) {
+        loadCalculator();
+      } else {
+        player.progress = 0;
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        initializeTurn();
+      }
+    },
+    true,
+    "Donate",
+    "Took Charity"
+  );
+
+  // Don't start timer automatically
+  timeLeft = 60;
+  updatePopupTimerDisplay();
   clearInterval(timerInterval);
-  timerInterval = null;
 
-  updateTimerDisplay();
+  setTimeout(() => {
+    const timerDisplay = document.getElementById("playerTimer");
+    const pauseBtn = document.getElementById("pauseResumeBtn");
+    let timerStarted = false;
 
-  const btn = document.getElementById("pauseResumeBtn");
-  if (btn) btn.innerText = "Restart";
+    if (pauseBtn) {
+      pauseBtn.onclick = function() {
+        if (!timerStarted) {
+          timerStarted = true;
+          pauseBtn.innerText = "Pause";
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timerDisplay) timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+              pauseBtn.innerText = "Restart";
+            }
+          }, 1000);
+        } else if (pauseBtn.innerText === "Pause") {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          pauseBtn.innerText = "Resume";
+        } else if (pauseBtn.innerText === "Resume") {
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timerDisplay) timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+              pauseBtn.innerText = "Restart";
+            }
+          }, 1000);
+          pauseBtn.innerText = "Pause";
+        } else if (pauseBtn.innerText === "Restart") {
+          timeLeft = 60;
+          if (timerDisplay) timerDisplay.innerText = timeLeft;
+          pauseBtn.innerText = "Pause";
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timerDisplay) timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+              pauseBtn.innerText = "Restart";
+            }
+          }, 1000);
+        }
+      };
+    }
 
-  const overlay = document.getElementById("customPopupOverlay");
-  const msg = document.getElementById("customPopupMessage");
-  const yesBtn = document.getElementById("customPopupYes");
-  const noBtn = document.getElementById("customPopupNo");
+    if (players.length > 1) {
+      const pickBtn = document.getElementById("popupPickPlayerBtn");
+      const dropdownContainer = document.getElementById("popupDropdownContainer");
+      if (pickBtn && dropdownContainer) {
+        pickBtn.onclick = function() {
+          dropdownContainer.innerHTML = `
+            <select id="popupPlayerSelector" style="display:inline-block; font-size:1rem;">
+              ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
+            </select>
+            <button id="popupPlayerSelectConfirm" class="styled-btn" style="margin-left:0.25rem;">Go</button>
+          `;
+          dropdownContainer.style.display = "inline-block";
 
-  if (players.length && typeof currentPlayerIndex === "number" && players[currentPlayerIndex]) {
-    const name = players[currentPlayerIndex].name;
-    let popupHTML = `<span class="player-name">${name}</span>'s time is up. What now?<br><br>`;
-    popupHTML += (players.length === 1)
-      ? `<button onclick="loadCharityEntry()">Record Moves</button>`
-      : `<button onclick="handleNextPlayer()">Next Player</button>
-         <button onclick="loadCharityEntry()">Record Moves</button>`;
+          setTimeout(() => {
+            const selector = document.getElementById("popupPlayerSelector");
+            const goBtn = document.getElementById("popupPlayerSelectConfirm");
+            if (goBtn && selector) {
+              goBtn.onclick = function() {
+                const selectedIndex = Number(selector.value);
+                if (selectedIndex !== currentPlayerIndex) {
+                  clearInterval(timerInterval);
+                  timerInterval = null;
+                  currentPlayerIndex = selectedIndex;
+                  showDonateOrCharityPopup();
+                }
+              };
+            }
+          }, 10);
+        };
+      }
+    }
+  }, 50);
 
-    msg.innerHTML = popupHTML;
-    overlay.style.display = "flex";
-    yesBtn.style.display = "none";
-    noBtn.style.display = "none";
-  }
-}
-
-function toggleTimer() {
-  const btn = document.getElementById("pauseResumeBtn");
-
-  if (timeLeft <= 0 && btn.innerText === "Restart") {
-    timeLeft = 60;
-    updateTimerDisplay();
-    clearInterval(timerInterval);
-    timerInterval = setInterval(decrementTimer, 1000);
-    return;
-  }
-
-  if (btn.innerText === "Pause") {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    btn.innerText = "Resume";
-  } else {
-    timerInterval = setInterval(decrementTimer, 1000);
-    btn.innerText = "Pause";
-  }
-}
-
-function decrementTimer() {
-  timeLeft--;
-  const timerEl = document.getElementById("playerTimer");
-  if (timerEl) timerEl.innerText = timeLeft;
-
-  if (timeLeft <= 0) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-
-    const btn = document.getElementById("pauseResumeBtn");
-    if (btn) btn.innerText = "Restart";
-
-    const overlay = document.getElementById("customPopupOverlay");
-    const msg = document.getElementById("customPopupMessage");
+  setTimeout(() => {
     const yesBtn = document.getElementById("customPopupYes");
     const noBtn = document.getElementById("customPopupNo");
 
-    const name = players[currentPlayerIndex].name;
-    let popupHTML = `<span class="player-name">${name}</span>'s time is up. What now?<br><br>`;
-    popupHTML += (players.length === 1)
-      ? `<button onclick="loadCharityEntry()">Record Moves</button>`
-      : `<button onclick="handleNextPlayer()">Next Player</button>
-         <button onclick="loadCharityEntry()">Record Moves</button>`;
+    // Insert the "Endgame Taxes" button directly below the No button
+    const overlay = document.getElementById("customPopupOverlay");
+    if (yesBtn && noBtn && overlay) {
+      // Remove any previous endgame button to avoid duplicates
+      const oldEndgame = document.getElementById("endgameFromTurn");
+      if (oldEndgame) oldEndgame.remove();
 
-    msg.innerHTML = popupHTML;
-    overlay.style.display = "flex";
-    yesBtn.style.display = "none";
-    noBtn.style.display = "none";
+      // Create new endgame button
+      const endgameBtn = document.createElement("button");
+      endgameBtn.type = "button";
+      endgameBtn.id = "endgameFromTurn";
+      endgameBtn.className = "styled-btn popup-action-btn";
+      endgameBtn.innerText = "Endgame Taxes";
+      endgameBtn.onclick = function() {
+        overlay.style.display = "none";
+        showEndgame();
+      };
+      // Insert after the No button for vertical stacking
+      noBtn.parentNode.insertBefore(endgameBtn, noBtn.nextSibling);
+    }
+  }, 0);
+}
+
+function updatePopupTimerDisplay() {
+  const timerDiv = document.getElementById("playerTimer");
+  if (timerDiv) {
+    timerDiv.innerText = timeLeft;
   }
-}
-
-function handleNextPlayer() {
-  document.getElementById("customPopupOverlay").style.display = "none";
-  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-  initializeTurn();
-}
-
-function loadCharityEntry() {
-  document.getElementById("customPopupOverlay").style.display = "none";
-  loadCalculator();
 }
 
 function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
       <h2><span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn</h2>
-      <div id="embeddedTimer">${getTimerHTML()}</div>
       ${players.length > 1 ? `<p>Select Next Player: ${cachedDropdownHTML}</p>` : ""}
       <div id="tallyProgress">${renderCardProgress(players[currentPlayerIndex].progress)}</div>
-      <p>Completed Streaks: <span id="streaks">${players[currentPlayerIndex].streaks}</span></p>
-      <p>Total Power Cards Donated: <span id="powers">${players[currentPlayerIndex].powerCards}</span></p>
       <label>Normal Cards Donated (this round):</label>
       <input type="number" id="normal" min="0" step="1"><br>
-      <label>Power Cards Donated (this round):</label>
+      <label>Power Cards or Cash Donated (this round):</label>
       <input type="number" id="power" min="0" step="1"><br>
-      <p>Did you take from Charity (this round)?</p>
-      <label><input type="radio" name="interrupted" value="yes"> Yes</label>
-      <label><input type="radio" name="interrupted" value="no"> No</label><br>
       <p style="font-family:'Lilita One'; color:#d4af7f;">Tax Breaks Earned: ${players[currentPlayerIndex].streaks + players[currentPlayerIndex].powerCards}</p>
-      <button onclick="calculate()">Confirm Moves</button>
-      <button onclick="showEndgame()">Endgame Taxes</button>
+      <button onclick="calculate()">Confirm and End Turn</button>
     </div>
   `;
-  // Timer is now managed inside the calculator box
 }
 
 function calculate() {
   const normalVal = document.getElementById("normal").value.trim();
   const powerVal = document.getElementById("power").value.trim();
-  const interruptedChoice = document.querySelector('input[name="interrupted"]:checked');
+
+  // If both fields are blank, prompt user to enter donations
+  if (normalVal === "" && powerVal === "") {
+    customPopup("Please enter your donations for at least one field.");
+    return;
+  }
+
+  // If entered, must be whole numbers and not negative
+  if (
+    (normalVal !== "" && !/^\d+$/.test(normalVal)) ||
+    (powerVal !== "" && !/^\d+$/.test(powerVal))
+  ) {
+    customPopup("Please enter whole numbers only (no decimals or negative numbers) for both Normal Cards Donated and Power Cards or Cash Donated.");
+    return;
+  }
+
+  const normalNum = normalVal === "" ? 0 : Number(normalVal);
+  const powerNum = powerVal === "" ? 0 : Number(powerVal);
+
+  if (normalNum < 0 || powerNum < 0) {
+    customPopup("Please enter non-negative whole numbers for both Normal Cards Donated and Power Cards or Cash Donated.");
+    return;
+  }
+
   const p = players[currentPlayerIndex];
 
-  const normalNum = /^\d+$/.test(normalVal) ? Number(normalVal) : 0;
-  const powerNum = /^\d+$/.test(powerVal) ? Number(powerVal) : 0;
+  p.progress += normalNum;
+  const completedStreaks = Math.floor(p.progress / 5);
+  p.streaks += completedStreaks;
+  p.progress = p.progress % 5;
+  p.powerCards += powerNum;
 
-  if (!interruptedChoice) {
-    if (normalNum === 0 && p.progress === 0) {
-      p.powerCards += powerNum;
-      loadCalculator();
-      return;
-    }
-    return customPopup("Please select whether Charity was taken this round.");
-  }
-
-  if (interruptedChoice.value === "yes") {
-    if (normalNum > 0) {
-      customInputPopup(`Of the ${normalNum} normal cards donated, how many were given BEFORE Charity was taken?`, function(beforeCards) {
-        if (!Number.isInteger(beforeCards) || beforeCards < 0 || beforeCards > normalNum) {
-          return customPopup("Invalid number. Must be between 0 and total donated.");
-        }
-
-        const afterCards = normalNum - beforeCards;
-
-        // Apply before-charity cards to current progress
-        p.progress += beforeCards;
-        if (p.progress >= 5) {
-          const completedBefore = Math.floor(p.progress / 5);
-          p.streaks += completedBefore;
-          p.progress = p.progress % 5;
-        }
-
-        // Reset streak for post-charity cards
-        p.progress = afterCards;
-        if (p.progress >= 5) {
-          const completedAfter = Math.floor(p.progress / 5);
-          p.streaks += completedAfter;
-          p.progress = p.progress % 5;
-        }
-
-        p.powerCards += powerNum;
-        loadCalculator();
-      });
-    } else {
-      // No cards donated, so reset progress
-      p.progress = 0;
-      p.powerCards += powerNum;
-      loadCalculator();
-    }
-  } else {
-    p.progress += normalNum;
-    const completedStreaks = Math.floor(p.progress / 5);
-    p.streaks += completedStreaks;
-    p.progress = p.progress % 5;
-
-    p.powerCards += powerNum;
-    loadCalculator();
-  }
-
-  if (!players.length || players.length === 1) {
-    document.getElementById("normal").value = "";
-    document.getElementById("power").value = "";
-    document.querySelectorAll('input[name="interrupted"]').forEach(el => el.checked = false);
-  }
+  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  initializeTurn();
 }
 
 function showEndgame() {
   customPopup("Is the game over? Ready for final taxes?", function(confirm) {
-    if (confirm) loadEndgame();
-  });
+    if (confirm) {
+      loadEndgame();
+    } else {
+      showDonateOrCharityPopup();
+    }
+  }); // Use default "Yes"/"No" labels here
 }
 
 function loadEndgame() {
@@ -455,7 +476,8 @@ function backToNameInput() {
   currentPlayerIndex = 0;
 }
 
-function customPopup(message, callback, isHtml = false) {
+// Popups
+function customPopup(message, callback, isHtml = false, yesText = "Yes", noText = "No") {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
   const yesBtn = document.getElementById("customPopupYes");
@@ -464,7 +486,7 @@ function customPopup(message, callback, isHtml = false) {
   if (isHtml) {
     msg.innerHTML = message;
   } else {
-    msg.innerText = message;
+    msg.innerHTML = message.replace(/\n/g, "<br>");
   }
   overlay.style.display = "flex";
 
@@ -473,9 +495,12 @@ function customPopup(message, callback, isHtml = false) {
     yesBtn.style.display = "inline-block";
     noBtn.style.display = "none";
     yesBtn.onclick = () => overlay.style.display = "none";
+    // Remove endgame button if present
+    const oldEndgame = document.getElementById("endgameFromTurn");
+    if (oldEndgame) oldEndgame.remove();
   } else {
-    yesBtn.innerText = "Yes";
-    noBtn.innerText = "No";
+    yesBtn.innerText = yesText;
+    noBtn.innerText = noText;
     yesBtn.style.display = "inline-block";
     noBtn.style.display = "inline-block";
     yesBtn.onclick = () => {
@@ -486,6 +511,9 @@ function customPopup(message, callback, isHtml = false) {
       overlay.style.display = "none";
       callback(false);
     };
+    // Remove endgame button if present (will be re-added by showDonateOrCharityPopup)
+    const oldEndgame = document.getElementById("endgameFromTurn");
+    if (oldEndgame) oldEndgame.remove();
   }
 }
 
