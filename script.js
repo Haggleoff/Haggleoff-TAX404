@@ -102,11 +102,59 @@ function initializeTurn() {
   showDonateOrCharityPopup();
 }
 
+// ---- NEW FUNCTION: Pick Player Modal ----
+function pickPlayerPopup() {
+  const dropdownHtml = `<select id="turnPlayerSelector">
+    ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
+  </select>`;
+  const html = `
+    ${dropdownHtml}
+    <br><br>
+    <button id="confirmPickPlayer" class="styled-btn">Confirm</button>
+  `;
+  customHTMLPopup(
+    `<div style="text-align:center; font-family:'Lilita One'; font-size:1.5rem; margin-bottom:1rem;">
+      <span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn
+    </div>
+    Pick a player to take their turn:`,
+    html,
+    () => {
+      const confirmBtn = document.getElementById("confirmPickPlayer");
+      const selector = document.getElementById("turnPlayerSelector");
+      if (confirmBtn && selector) {
+        confirmBtn.onclick = () => {
+          const selectedIndex = Number(selector.value);
+          document.getElementById("customPopupOverlay").style.display = "none";
+          if (selectedIndex !== currentPlayerIndex) {
+            currentPlayerIndex = selectedIndex;
+          }
+          initializeTurn();
+        };
+      }
+      // Wire up close button to restore player's turn popup!
+      const closeBtn = document.getElementById("customCloseBtn");
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          document.getElementById("customPopupOverlay").style.display = "none";
+          showDonateOrCharityPopup();
+        };
+      }
+    }
+  );
+}
+// ---- END NEW FUNCTION ----
+
 function showDonateOrCharityPopup() {
   const player = players[currentPlayerIndex];
+  // Pop-up title: centered, at the top
+  const popupTitleHTML = `
+    <div style="text-align:center; font-family:'Lilita One'; font-size:1.5rem; margin-bottom:1rem;">
+      <span class="player-name">${player.name}</span>'s Turn
+    </div>
+  `;
+
   const titleRowHTML = `
     <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.5rem;">
-      <span class="player-name">${player.name}</span>'s Turn.
       ${
         players.length > 1
           ? `<button id="popupPickPlayerBtn" class="styled-btn" style="margin-left:0.25rem;">Pick Player</button>
@@ -116,7 +164,6 @@ function showDonateOrCharityPopup() {
     </div>
   `;
 
-  // Timer HTML (do not auto-start; button says Start Timer)
   const timerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 1rem 0 1rem 0;">
       <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">60</p>
@@ -137,8 +184,8 @@ function showDonateOrCharityPopup() {
     </div>
   `;
 
-  // Main popup content
   const popupContent = `
+    ${popupTitleHTML}
     ${titleRowHTML}
     ${timerHTML}
     Did <span class="player-name">${player.name}</span> <strong>Donate</strong> or <strong>Take Charity</strong>?<br><br>
@@ -146,7 +193,6 @@ function showDonateOrCharityPopup() {
     <div id="endgameBtnContainer"></div>
   `;
 
-  // Use custom labels for Donate/Took Charity here
   customPopup(
     popupContent,
     function(choice) {
@@ -165,7 +211,6 @@ function showDonateOrCharityPopup() {
     "Took Charity"
   );
 
-  // Don't start timer automatically
   timeLeft = 60;
   updatePopupTimerDisplay();
   clearInterval(timerInterval);
@@ -223,32 +268,9 @@ function showDonateOrCharityPopup() {
 
     if (players.length > 1) {
       const pickBtn = document.getElementById("popupPickPlayerBtn");
-      const dropdownContainer = document.getElementById("popupDropdownContainer");
-      if (pickBtn && dropdownContainer) {
+      if (pickBtn) {
         pickBtn.onclick = function() {
-          dropdownContainer.innerHTML = `
-            <select id="popupPlayerSelector" style="display:inline-block; font-size:1rem;">
-              ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
-            </select>
-            <button id="popupPlayerSelectConfirm" class="styled-btn" style="margin-left:0.25rem;">Go</button>
-          `;
-          dropdownContainer.style.display = "inline-block";
-
-          setTimeout(() => {
-            const selector = document.getElementById("popupPlayerSelector");
-            const goBtn = document.getElementById("popupPlayerSelectConfirm");
-            if (goBtn && selector) {
-              goBtn.onclick = function() {
-                const selectedIndex = Number(selector.value);
-                if (selectedIndex !== currentPlayerIndex) {
-                  clearInterval(timerInterval);
-                  timerInterval = null;
-                  currentPlayerIndex = selectedIndex;
-                  showDonateOrCharityPopup();
-                }
-              };
-            }
-          }, 10);
+          pickPlayerPopup();
         };
       }
     }
@@ -257,15 +279,11 @@ function showDonateOrCharityPopup() {
   setTimeout(() => {
     const yesBtn = document.getElementById("customPopupYes");
     const noBtn = document.getElementById("customPopupNo");
-
-    // Insert the "Endgame Taxes" button directly below the No button
     const overlay = document.getElementById("customPopupOverlay");
     if (yesBtn && noBtn && overlay) {
-      // Remove any previous endgame button to avoid duplicates
       const oldEndgame = document.getElementById("endgameFromTurn");
       if (oldEndgame) oldEndgame.remove();
 
-      // Create new endgame button
       const endgameBtn = document.createElement("button");
       endgameBtn.type = "button";
       endgameBtn.id = "endgameFromTurn";
@@ -275,7 +293,6 @@ function showDonateOrCharityPopup() {
         overlay.style.display = "none";
         showEndgame();
       };
-      // Insert after the No button for vertical stacking
       noBtn.parentNode.insertBefore(endgameBtn, noBtn.nextSibling);
     }
   }, 0);
@@ -308,13 +325,11 @@ function calculate() {
   const normalVal = document.getElementById("normal").value.trim();
   const powerVal = document.getElementById("power").value.trim();
 
-  // If both fields are blank, prompt user to enter donations
   if (normalVal === "" && powerVal === "") {
     customPopup("Please enter your donations for at least one field.");
     return;
   }
 
-  // If entered, must be whole numbers and not negative
   if (
     (normalVal !== "" && !/^\d+$/.test(normalVal)) ||
     (powerVal !== "" && !/^\d+$/.test(powerVal))
@@ -350,7 +365,7 @@ function showEndgame() {
     } else {
       showDonateOrCharityPopup();
     }
-  }); // Use default "Yes"/"No" labels here
+  });
 }
 
 function loadEndgame() {
@@ -495,7 +510,6 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
     yesBtn.style.display = "inline-block";
     noBtn.style.display = "none";
     yesBtn.onclick = () => overlay.style.display = "none";
-    // Remove endgame button if present
     const oldEndgame = document.getElementById("endgameFromTurn");
     if (oldEndgame) oldEndgame.remove();
   } else {
@@ -511,7 +525,6 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
       overlay.style.display = "none";
       callback(false);
     };
-    // Remove endgame button if present (will be re-added by showDonateOrCharityPopup)
     const oldEndgame = document.getElementById("endgameFromTurn");
     if (oldEndgame) oldEndgame.remove();
   }
@@ -555,12 +568,6 @@ function customHTMLPopup(message, html, callback) {
   noBtn.style.display = "none";
 
   const closeBtn = document.getElementById("customCloseBtn");
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      overlay.style.display = "none";
-    };
-  }
-
   if (typeof callback === "function") callback();
 }
 
