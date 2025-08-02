@@ -323,7 +323,6 @@ function updatePopupTimerDisplay() {
   }
 }
 
-// ---- UPDATED FUNCTION: No select next player/dropdown ----
 function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
@@ -412,21 +411,18 @@ function loadEndgame() {
 
 function calculateFinalTaxes() {
   const summary = document.getElementById("finalSummary");
-  // Always start hidden and empty
   summary.style.display = "none";
   summary.innerHTML = "";
 
-  // Validate all inputs first (works for 1 or multiple players)
   for (let i = 0; i < players.length; i++) {
     const coinsVal = document.getElementById(`coins_${i}`).value.trim();
     const propsVal = document.getElementById(`props_${i}`).value.trim();
     if (!/^\d+$/.test(coinsVal) || !/^\d+$/.test(propsVal)) {
       customPopup("Use only whole non-negative numbers.");
-      return; // Stop and do not reveal summary/results
+      return;
     }
   }
 
-  // All inputs are valid, so display the results
   summary.style.display = "block";
   summary.innerHTML = "<h3>Final Results</h3>";
 
@@ -457,7 +453,7 @@ function calculateFinalTaxes() {
         <span style="font-weight:bold; color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
         <span style="font-weight:bold; color:#d4af7f;">Net Income: ${netIncome}</span><br>
         Audit Risk: ${getAuditRiskLevel(p)}<br>
-        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins)}</em>
+        <em style="color:#d4af7f;">${getTaxBracketMessage(netIncome)}</em>
       </p>
     `;
   });
@@ -476,11 +472,11 @@ function getAuditRiskLevel(player) {
   return "Low";
 }
 
-function getTaxBracketMessage(coins) {
-  if (coins <= 6) return "Enjoy tax-free poverty.";
-  if (coins <= 14) return "The poor get crushed.";
-  if (coins <= 24) return "The middle class gets squeezed.";
-  if (coins <= 39) return "The rich barely feel it.";
+function getTaxBracketMessage(netIncome) {
+  if (netIncome <= 6) return "Enjoy tax-free poverty.";
+  if (netIncome <= 14) return "The poor get crushed.";
+  if (netIncome <= 24) return "The middle class gets squeezed.";
+  if (netIncome <= 39) return "The rich barely feel it.";
   return "Wealth scales, burden doesn’t.";
 }
 
