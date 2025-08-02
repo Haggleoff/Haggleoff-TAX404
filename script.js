@@ -20,12 +20,30 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
   }));
 
   document.getElementById("playerSetupBox").style.display = "none";
-  customPopup("Reloading this page will reset your progress.");
 
-  if (players.length === 1) {
-    initializeTurn();
+  // --- Single player: show verbage, not calculation ---
+  let setupMsg = `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">Reloading this page will reset your progress.</span><br><br>`;
+  if (players.length > 1) {
+    const n = players.length;
+    setupMsg += `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">
+      After each player receives 1 free starting property during Setup,
+    </span><br>
+    <span style="font-family: 'Lilita One', cursive; color: #d4af7f;">
+      Property Stack size: ${n + 1}
+    </span>`;
+    customPopup(setupMsg, function() {
+      showStartOptions();
+    }, true, "Yes", "No", true);
   } else {
-    showStartOptions();
+    setupMsg += `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">
+      After each player receives 1 free starting property during Setup,
+    </span><br>
+    <span style="font-family: 'Lilita One', cursive; color: #d4af7f;">
+      Property Stack size: number of players + 1
+    </span>`;
+    customPopup(setupMsg, function() {
+      initializeTurn();
+    }, true, "Yes", "No", true);
   }
 });
 
@@ -305,11 +323,11 @@ function updatePopupTimerDisplay() {
   }
 }
 
+// ---- UPDATED FUNCTION: No select next player/dropdown ----
 function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
       <h2><span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn</h2>
-      ${players.length > 1 ? `<p>Select Next Player: ${cachedDropdownHTML}</p>` : ""}
       <div id="tallyProgress">${renderCardProgress(players[currentPlayerIndex].progress)}</div>
       <label>Normal Cards Donated (this round):</label>
       <input type="number" id="normal" min="0" step="1"><br>
@@ -394,42 +412,57 @@ function loadEndgame() {
 
 function calculateFinalTaxes() {
   const summary = document.getElementById("finalSummary");
+  // Always start hidden and empty
+  summary.style.display = "none";
+  summary.innerHTML = "";
+
+  // Validate all inputs first (works for 1 or multiple players)
+  for (let i = 0; i < players.length; i++) {
+    const coinsVal = document.getElementById(`coins_${i}`).value.trim();
+    const propsVal = document.getElementById(`props_${i}`).value.trim();
+    if (!/^\d+$/.test(coinsVal) || !/^\d+$/.test(propsVal)) {
+      customPopup("Use only whole non-negative numbers.");
+      return; // Stop and do not reveal summary/results
+    }
+  }
+
+  // All inputs are valid, so display the results
   summary.style.display = "block";
+  summary.innerHTML = "<h3>Final Results</h3>";
 
-  setTimeout(() => {
-    summary.innerHTML = "<h3>Final Results</h3>";
+  players.forEach((p, i) => {
+    const coinsVal = document.getElementById(`coins_${i}`).value.trim();
+    const propsVal = document.getElementById(`props_${i}`).value.trim();
 
-    players.forEach((p, i) => {
-      const coinsVal = document.getElementById(`coins_${i}`).value.trim();
-      const propsVal = document.getElementById(`props_${i}`).value.trim();
+    p.coins = Number(coinsVal);
+    p.properties = Math.max(1, Number(propsVal));
 
-      if (!/^\d+$/.test(coinsVal) || !/^\d+$/.test(propsVal)) return customPopup("Use only whole non-negative numbers.");
+    const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
+    const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
+    const preLimitTax = bracketTax + propertyTax;
+    const postBreakTax = Math.max(0, preLimitTax - (p.streaks + p.powerCards));
+    p.tax = Math.min(postBreakTax, p.coins);
+    const avoided = Math.max(0, preLimitTax - p.tax);
+    const beforeRate = p.coins ? Math.round((preLimitTax / p.coins) * 100) : 0;
+    const afterRate = p.coins ? Math.round((p.tax / p.coins) * 100) : 0;
+    const netIncome = p.coins - p.tax;
 
-      p.coins = Number(coinsVal);
-      p.properties = Math.max(1, Number(propsVal));
+    summary.innerHTML += `
+      <p>
+        <span class="player-name">${p.name}</span><br>
+        Coins: ${p.coins}, Properties: ${p.properties}<br>
+        <strong>Gross Tax: ${preLimitTax}</strong><br>
+        <span style="font-weight:bold; color:#d4af7f;">Effective Rate: ${beforeRate}% → ${afterRate}%</span><br>
+        Deductions: ${avoided}<br>
+        <span style="font-weight:bold; color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
+        <span style="font-weight:bold; color:#d4af7f;">Net Income: ${netIncome}</span><br>
+        Audit Risk: ${getAuditRiskLevel(p)}<br>
+        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins)}</em>
+      </p>
+    `;
+  });
 
-      const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
-      const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
-      const preLimitTax = bracketTax + propertyTax;
-      const postBreakTax = Math.max(0, preLimitTax - (p.streaks + p.powerCards));
-      p.tax = Math.min(postBreakTax, p.coins);
-      const avoided = Math.max(0, preLimitTax - p.tax);
-      const beforeRate = p.coins ? Math.round((preLimitTax / p.coins) * 100) : 0;
-      const afterRate = p.coins ? Math.round((p.tax / p.coins) * 100) : 0;
-
-      summary.innerHTML += `
-        <p><span class="player-name">${p.name}</span> — ${p.tax} Haggleoffs Tax Owed<br>
-          Coins: ${p.coins}, Properties: ${p.properties}<br>
-          Effective Rate: ${beforeRate}% → ${afterRate}%<br>
-          Tax Avoided: ${avoided}<br>
-          Audit Risk: ${getAuditRiskLevel(p)}<br>
-          <em>${getTaxBracketMessage(p.coins)}</em>
-        </p>
-      `;
-    });
-
-    determineWinner();
-  }, 1000);
+  determineWinner();
 }
 
 function getAuditRiskLevel(player) {
@@ -457,16 +490,19 @@ function determineWinner() {
   const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
   const summary = document.getElementById("finalSummary");
 
-  if (contenders.length === 1) {
-    summary.innerHTML += `<p><strong><span class="player-name">${contenders[0].name}</span> wins with ${maxCoins} Haggleoffs!</strong></p>`;
-  } else {
-    const maxProps = Math.max(...contenders.map(p => p.properties));
-    const tied = contenders.filter(p => p.properties === maxProps);
-    if (tied.length === 1) {
-      summary.innerHTML += `<p><strong><span class="player-name">${tied[0].name}</span> wins by owning more properties!</strong></p>`;
+  // Only show winner message if there is more than one player
+  if (players.length > 1) {
+    if (contenders.length === 1) {
+      summary.innerHTML += `<p><strong><span class="player-name">${contenders[0].name}</span> wins with ${maxCoins} Haggleoffs!</strong></p>`;
     } else {
-      const names = tied.map(p => `<span class="player-name">${p.name}</span>`).join(", ");
-      summary.innerHTML += `<p><strong><span style="color:#d4af7f;">There are no winners—just shareholders.</span></strong><br>Tied players: ${names}</p>`;
+      const maxProps = Math.max(...contenders.map(p => p.properties));
+      const tied = contenders.filter(p => p.properties === maxProps);
+      if (tied.length === 1) {
+        summary.innerHTML += `<p><strong><span class="player-name">${tied[0].name}</span> wins by owning more properties!</strong></p>`;
+      } else {
+        const names = tied.map(p => `<span class="player-name">${p.name}</span>`).join(", ");
+        summary.innerHTML += `<p><strong><span style="color:#d4af7f;">There are no winners—just shareholders.</span></strong><br>Tied players: ${names}</p>`;
+      }
     }
   }
 
@@ -492,7 +528,7 @@ function backToNameInput() {
 }
 
 // Popups
-function customPopup(message, callback, isHtml = false, yesText = "Yes", noText = "No") {
+function customPopup(message, callback, isHtml = false, yesText = "Yes", noText = "No", okOnly = false) {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
   const yesBtn = document.getElementById("customPopupYes");
@@ -512,6 +548,14 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
     yesBtn.onclick = () => overlay.style.display = "none";
     const oldEndgame = document.getElementById("endgameFromTurn");
     if (oldEndgame) oldEndgame.remove();
+  } else if (okOnly) {
+    yesBtn.innerText = "OK";
+    yesBtn.style.display = "inline-block";
+    noBtn.style.display = "none";
+    yesBtn.onclick = () => {
+      overlay.style.display = "none";
+      callback();
+    };
   } else {
     yesBtn.innerText = yesText;
     noBtn.innerText = noText;
