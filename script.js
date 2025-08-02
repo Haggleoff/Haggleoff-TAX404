@@ -453,7 +453,7 @@ function calculateFinalTaxes() {
         <span style="font-weight:bold; color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
         <span style="font-weight:bold; color:#d4af7f;">Net Income: ${netIncome}</span><br>
         Audit Risk: ${getAuditRiskLevel(p)}<br>
-        <em style="color:#d4af7f;">${getTaxBracketMessage(netIncome)}</em>
+        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins)}</em>
       </p>
     `;
   });
@@ -472,11 +472,12 @@ function getAuditRiskLevel(player) {
   return "Low";
 }
 
-function getTaxBracketMessage(netIncome) {
-  if (netIncome <= 6) return "Enjoy tax-free poverty.";
-  if (netIncome <= 14) return "The poor get crushed.";
-  if (netIncome <= 24) return "The middle class gets squeezed.";
-  if (netIncome <= 39) return "The rich barely feel it.";
+// Satirical message now based on coins, not net income
+function getTaxBracketMessage(coins) {
+  if (coins <= 6) return "Enjoy tax-free poverty.";
+  if (coins <= 14) return "The poor get crushed.";
+  if (coins <= 24) return "The middle class gets squeezed.";
+  if (coins <= 39) return "The rich barely feel it.";
   return "Wealth scales, burden doesn’t.";
 }
 
