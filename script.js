@@ -387,6 +387,17 @@ function loadEndgame() {
   `;
 }
 
+// --- UPDATED TAX BRACKET MESSAGE FUNCTION ---
+function getTaxBracketMessage(coins, properties) {
+  // New satirical message if coins <= 6 and more than 3 properties
+  if (coins <= 6 && properties > 3) return "Broke on paper, rich in acres.";
+  if (coins <= 6) return "Enjoy tax-free poverty.";
+  if (coins <= 14) return "The poor get crushed.";
+  if (coins <= 24) return "The middle class gets squeezed.";
+  if (coins <= 39) return "The rich barely feel it.";
+  return "Wealth scales, burden doesn’t.";
+}
+
 function calculateFinalTaxes() {
   const summary = document.getElementById("finalSummary");
   summary.style.display = "none";
@@ -413,9 +424,19 @@ function calculateFinalTaxes() {
 
     const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
     const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
-    const preLimitTax = bracketTax + propertyTax;
+
+    // --- CAP GROSS TAX AT 58% ---
+    let preLimitTax = bracketTax + propertyTax;
+    if (p.coins > 6) {
+      const maxGrossTax = Math.floor(p.coins * 0.58);
+      if (preLimitTax > maxGrossTax) {
+        preLimitTax = maxGrossTax;
+      }
+    }
+
     const postBreakTax = Math.max(0, preLimitTax - (p.streaks + p.powerCards));
     p.tax = Math.min(postBreakTax, p.coins);
+
     const avoided = Math.max(0, preLimitTax - p.tax);
     const beforeRate = p.coins ? Math.round((preLimitTax / p.coins) * 100) : 0;
     const afterRate = p.coins ? Math.round((p.tax / p.coins) * 100) : 0;
@@ -431,7 +452,7 @@ function calculateFinalTaxes() {
         <span style="font-weight:bold; color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
         <span style="font-weight:bold; color:#d4af7f;">Net Income: ${netIncome}</span><br>
         Audit Risk: ${getAuditRiskLevel(p)}<br>
-        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins)}</em>
+        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins, p.properties)}</em>
       </p>
     `;
   });
@@ -448,14 +469,6 @@ function getAuditRiskLevel(player) {
   if (ratio >= 0.5) return "High";
   if (ratio >= 0.3) return "Moderate";
   return "Low";
-}
-
-function getTaxBracketMessage(coins) {
-  if (coins <= 6) return "Enjoy tax-free poverty.";
-  if (coins <= 14) return "The poor get crushed.";
-  if (coins <= 24) return "The middle class gets squeezed.";
-  if (coins <= 39) return "The rich barely feel it.";
-  return "Wealth scales, burden doesn’t.";
 }
 
 function determineWinner() {
