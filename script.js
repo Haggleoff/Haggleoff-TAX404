@@ -2,18 +2,75 @@ let players = [];
 let currentPlayerIndex = 0;
 let timerInterval = null;
 let timeLeft = 60;
-let timerRunningState = false;
+let timerRunningState = true;
+
+// --- TIMER LOGIC ---
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    if (timerRunningState && timeLeft > 0) {
+      timeLeft--;
+      updatePopupTimerDisplay();
+      if (timeLeft <= 0) {
+        timerRunningState = false;
+        updatePauseButtonState();
+      }
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function updatePopupTimerDisplay() {
+  const timerDivs = document.querySelectorAll("#playerTimer");
+  timerDivs.forEach(div => div.innerText = timeLeft);
+}
+
+function updatePauseButtonState() {
+  const pauseBtn = document.getElementById("pauseResumeBtn");
+  if (!pauseBtn) return;
+  if (timeLeft <= 0) {
+    pauseBtn.innerText = "Restart";
+    pauseBtn.style.backgroundColor = "";
+  } else if (timerRunningState) {
+    pauseBtn.innerText = "Pause";
+    pauseBtn.style.backgroundColor = "#947c52";
+  } else {
+    pauseBtn.innerText = "Resume";
+    pauseBtn.style.backgroundColor = "";
+  }
+}
+
+function attachPauseButtonHandler() {
+  const pauseBtn = document.getElementById("pauseResumeBtn");
+  if (!pauseBtn) return;
+  pauseBtn.onclick = function () {
+    if (pauseBtn.innerText === "Pause") {
+      timerRunningState = false;
+      updatePauseButtonState();
+    } else if (pauseBtn.innerText === "Resume") {
+      timerRunningState = true;
+      updatePauseButtonState();
+    } else if (pauseBtn.innerText === "Restart") {
+      timeLeft = 60;
+      timerRunningState = true;
+      updatePopupTimerDisplay();
+      updatePauseButtonState();
+    }
+  };
+}
 
 // --- PLAYER ENTRY & SETUP ---
 document.getElementById("playerForm").addEventListener("submit", function(e) {
   e.preventDefault();
   const entered = [...this.querySelectorAll("input[name='playerName']")].filter(input => input.value.trim());
-
   if (entered.length < 2) {
     customPopup("You’ll need at least two capitalists to get crushed. Multiplayer only!");
     return;
   }
-
   players = entered.map(input => ({
     name: input.value.trim(),
     streaks: 0,
@@ -23,9 +80,7 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
     properties: 0,
     tax: 0
   }));
-
   document.getElementById("playerSetupBox").style.display = "none";
-
   const n = players.length;
   let setupMsg = `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">Reloading this page will reset your progress.</span><br><br>`;
   setupMsg += `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">
@@ -70,25 +125,20 @@ function confirmManualStarter() {
   timeLeft = 60;
   timerRunningState = true;
   initializeTurn();
-  setTimeout(startPlayerTimer, 100);
 }
 
 function handlePlayerSwitch(el) {
   const selectedIndex = Number(el.value);
   if (selectedIndex === currentPlayerIndex) return;
-
   customPopup(
     `End <span class="player-name">${players[currentPlayerIndex].name}</span>'s turn and switch to <span class="player-name">${players[selectedIndex].name}</span>?`, 
     function(confirm) {
       if (confirm) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        timerRunningState = false;
+        stopTimer();
         timeLeft = 60;
         currentPlayerIndex = selectedIndex;
         timerRunningState = true;
         initializeTurn();
-        setTimeout(startPlayerTimer, 100);
       } else {
         el.value = currentPlayerIndex;
       }
@@ -111,7 +161,7 @@ function randomStarter() {
       <div class="calculatorBox">
         <h2>🎉 Starting Player is...</h2>
         <h1><span class="player-name">${name}</span></h1>
-        <button onclick="initializeTurn(); setTimeout(startPlayerTimer,100);">START</button>
+        <button onclick="initializeTurn()">START</button>
       </div>
     `;
     timeLeft = 60;
@@ -145,16 +195,13 @@ function pickPlayerPopup() {
       if (confirmBtn && selector) {
         confirmBtn.onclick = () => {
           if (Number(selector.value) !== currentPlayerIndex) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timerRunningState = false;
+            stopTimer();
             currentPlayerIndex = Number(selector.value);
             timeLeft = 60;
             timerRunningState = true;
           }
           document.getElementById("customPopupOverlay").style.display = "none";
           initializeTurn();
-          setTimeout(startPlayerTimer, 100);
         };
       }
       const closeBtn = document.getElementById("customCloseBtn");
@@ -168,32 +215,11 @@ function pickPlayerPopup() {
   );
 }
 
-// --- TIMER LOGIC ---
-function startPlayerTimer() {
-  if (timerInterval) return;
-  timerRunningState = true;
-  const pauseBtn = document.getElementById("pauseResumeBtn");
-  if (pauseBtn) {
-    pauseBtn.innerText = "Pause";
-    pauseBtn.style.backgroundColor = "#947c52";
-  }
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    updatePopupTimerDisplay();
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-      timerRunningState = false;
-      if (pauseBtn) {
-        pauseBtn.innerText = "Restart";
-        pauseBtn.style.backgroundColor = "";
-      }
-    }
-  }, 1000);
-}
-
 // --- PLAYER TURN POPUP ---
 function showDonateOrCharityPopup() {
+  timerRunningState = true;
+  startTimer();
+
   const player = players[currentPlayerIndex];
   const popupTitleHTML = `
     <div style="text-align:center; font-family:'Lilita One'; font-size:1.5rem; margin-bottom:1rem;">
@@ -210,13 +236,7 @@ function showDonateOrCharityPopup() {
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 1rem 0 1rem 0;">
       <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">${timeLeft}</p>
       <div style="display:flex; gap:0.5rem;">
-        <button id="pauseResumeBtn" class="styled-btn">${
-          timerInterval && timerRunningState ? "Pause" :
-          timerInterval && !timerRunningState ? "Resume" :
-          timerRunningState && !timerInterval && timeLeft > 0 ? "Pause" :
-          timeLeft <= 0 ? "Restart" :
-          "Pause"
-        }</button>
+        <button id="pauseResumeBtn" class="styled-btn">Pause</button>
       </div>
     </div>
   `;
@@ -245,7 +265,6 @@ function showDonateOrCharityPopup() {
         loadCalculator();
       } else {
         players[currentPlayerIndex].progress = 0;
-        // Do NOT reset timer, do NOT advance player, just reload popup
         showDonateOrCharityPopup();
       }
     },
@@ -253,19 +272,20 @@ function showDonateOrCharityPopup() {
     "Donate",
     "Took Charity"
   );
-  setTimeout(attachTimerControls, 50);
-
-  // Pick Player button
   setTimeout(() => {
+    updatePopupTimerDisplay();
+    updatePauseButtonState();
+    attachPauseButtonHandler();
+
+    // -- FIX: Attach Pick Player handler --
     const pickBtn = document.getElementById("popupPickPlayerBtn");
     if (pickBtn) {
       pickBtn.onclick = function() {
         pickPlayerPopup();
       };
     }
-  }, 60);
 
-  setTimeout(() => {
+    // Endgame button logic (optional)
     const yesBtn = document.getElementById("customPopupYes");
     const noBtn = document.getElementById("customPopupNo");
     const overlay = document.getElementById("customPopupOverlay");
@@ -284,32 +304,13 @@ function showDonateOrCharityPopup() {
       };
       noBtn.parentNode.insertBefore(endgameBtn, noBtn.nextSibling);
     }
-  }, 0);
-
-  // Start timer if necessary
-  setTimeout(() => {
-    if (timerRunningState && !timerInterval && timeLeft > 0) {
-      startPlayerTimer();
-    }
-  }, 70);
+  }, 50);
 }
 
 function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
       <h2><span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn</h2>
-      <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 1rem 0 1rem 0;">
-        <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">${timeLeft}</p>
-        <div style="display:flex; gap:0.5rem;">
-          <button id="pauseResumeBtn" class="styled-btn">${
-            timerInterval && timerRunningState ? "Pause" :
-            timerInterval && !timerRunningState ? "Resume" :
-            timerRunningState && !timerInterval && timeLeft > 0 ? "Pause" :
-            timeLeft <= 0 ? "Restart" :
-            "Pause"
-          }</button>
-        </div>
-      </div>
       <div id="tallyProgress">${renderCardProgress(players[currentPlayerIndex].progress)}</div>
       <label>Normal Cards Donated (this round):</label>
       <input type="number" id="normal" min="0" step="1"><br>
@@ -319,109 +320,16 @@ function loadCalculator() {
       <button onclick="confirmTurn()">Confirm</button>
     </div>
   `;
-  setTimeout(attachTimerControls, 50);
-
-  // Start timer if necessary
-  setTimeout(() => {
-    if (timerRunningState && !timerInterval && timeLeft > 0) {
-      startPlayerTimer();
-    }
-  }, 70);
-}
-
-function attachTimerControls() {
-  const pauseBtn = document.getElementById("pauseResumeBtn");
-  updatePopupTimerDisplay();
-
-  if (pauseBtn) {
-    // Always reset button color before changing
-    pauseBtn.style.backgroundColor = "";
-
-    // Set color only if the button is "Pause"
-    if (
-      pauseBtn.innerText === "Pause" ||
-      (timerRunningState && !timerInterval && timeLeft > 0)
-    ) {
-      pauseBtn.style.backgroundColor = "#947c52";
-    }
-
-    pauseBtn.onclick = function() {
-      if (!timerInterval && pauseBtn.innerText === "Resume") {
-        timerRunningState = true;
-        pauseBtn.innerText = "Pause";
-        pauseBtn.style.backgroundColor = "#947c52";
-        timerInterval = setInterval(() => {
-          timeLeft--;
-          updatePopupTimerDisplay();
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timerRunningState = false;
-            pauseBtn.innerText = "Restart";
-            pauseBtn.style.backgroundColor = "";
-          }
-        }, 1000);
-      } else if (!timerInterval && pauseBtn.innerText === "Restart") {
-        timeLeft = 60;
-        updatePopupTimerDisplay();
-        timerRunningState = true;
-        pauseBtn.innerText = "Pause";
-        pauseBtn.style.backgroundColor = "#947c52";
-        timerInterval = setInterval(() => {
-          timeLeft--;
-          updatePopupTimerDisplay();
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timerRunningState = false;
-            pauseBtn.innerText = "Restart";
-            pauseBtn.style.backgroundColor = "";
-          }
-        }, 1000);
-      } else if (timerInterval && pauseBtn.innerText === "Pause") {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        timerRunningState = false;
-        pauseBtn.innerText = "Resume";
-        pauseBtn.style.backgroundColor = "";
-      }
-    };
-
-    // Always re-establish timer if it should be running and not already running
-    if (timerRunningState && !timerInterval && timeLeft > 0) {
-      pauseBtn.innerText = "Pause";
-      pauseBtn.style.backgroundColor = "#947c52";
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        updatePopupTimerDisplay();
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-          timerRunningState = false;
-          pauseBtn.innerText = "Restart";
-          pauseBtn.style.backgroundColor = "";
-        }
-      }, 1000);
-    }
-  }
-  updatePopupTimerDisplay();
-}
-
-function updatePopupTimerDisplay() {
-  const timerDivs = document.querySelectorAll("#playerTimer");
-  timerDivs.forEach(div => div.innerText = timeLeft);
 }
 
 // --- DONATION LOGIC ---
 function confirmTurn() {
   const normalVal = document.getElementById("normal").value.trim();
   const powerVal = document.getElementById("power").value.trim();
-
   if (normalVal === "" && powerVal === "") {
     customPopup("Please enter your donations for at least one field.");
     return;
   }
-
   if (
     (normalVal !== "" && !/^\d+$/.test(normalVal)) ||
     (powerVal !== "" && !/^\d+$/.test(powerVal))
@@ -429,28 +337,22 @@ function confirmTurn() {
     customPopup("Please enter whole numbers only (no decimals or negative numbers) for both Normal Cards Donated and Power Cards or Cash Donated.");
     return;
   }
-
   const normalNum = normalVal === "" ? 0 : Number(normalVal);
   const powerNum = powerVal === "" ? 0 : Number(powerVal);
-
   if (normalNum < 0 || powerNum < 0) {
     customPopup("Please enter non-negative whole numbers for both Normal Cards Donated and Power Cards or Cash Donated.");
     return;
   }
-
   const p = players[currentPlayerIndex];
-
   p.progress += normalNum;
   const completedStreaks = Math.floor(p.progress / 5);
   p.streaks += completedStreaks;
   p.progress = p.progress % 5;
   p.powerCards += powerNum;
-
-  // Do NOT advance player here!
   showDonateOrCharityPopup();
 }
 
-// --- ENDGAME, POPUPS, UTILS (unchanged from your last version) ---
+// --- ENDGAME SECTION ---
 function showEndgame() {
   customPopup("Is the game over? Ready for final taxes?", function(confirm) {
     if (confirm) {
@@ -462,8 +364,7 @@ function showEndgame() {
 }
 
 function loadEndgame() {
-  clearInterval(timerInterval);
-  timerInterval = null;
+  stopTimer();
   timerRunningState = false;
   let blocks = players.map((p, i) => `
     <div class="playerEndgameBlock">
@@ -595,9 +496,8 @@ function backToNameInput() {
   document.getElementById("mainGameContainer").innerHTML = "";
   players = [];
   currentPlayerIndex = 0;
-  clearInterval(timerInterval);
-  timerInterval = null;
-  timerRunningState = false;
+  stopTimer();
+  timerRunningState = true;
   timeLeft = 60;
 }
 
@@ -648,32 +548,6 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
   }
 }
 
-function customInputPopup(message, callback) {
-  const overlay = document.getElementById("customInputOverlay");
-  const msg = document.getElementById("customInputMessage");
-  const field = document.getElementById("customInputField");
-  const submit = document.getElementById("customInputSubmit");
-  const cancel = document.getElementById("customInputCancel");
-
-  msg.innerText = message;
-  field.value = "";
-  overlay.style.display = "flex";
-
-  submit.onclick = () => {
-    const val = Number(field.value.trim());
-    if (!Number.isInteger(val) || val < 0) {
-      overlay.style.display = "none";
-      return customPopup("Please enter a valid whole number.");
-    }
-    overlay.style.display = "none";
-    callback(val);
-  };
-
-  cancel.onclick = () => {
-    overlay.style.display = "none";
-  };
-}
-
 function customHTMLPopup(message, html, callback) {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
@@ -691,7 +565,6 @@ function customHTMLPopup(message, html, callback) {
 
 function renderCardProgress(progress) {
   if (progress === 0) return "";
-
   let blocks = "";
   for (let i = 0; i < progress; i++) {
     blocks += `<div style="
@@ -702,6 +575,8 @@ function renderCardProgress(progress) {
       border-radius: 6px;">
     </div>`;
   }
-
   return `<div style="display: flex; justify-content: center; margin-top: 1rem;">${blocks}</div>`;
 }
+
+// --- Start timer on load ---
+startTimer();
