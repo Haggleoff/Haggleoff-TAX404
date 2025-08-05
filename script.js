@@ -425,10 +425,10 @@ function calculateFinalTaxes() {
     const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
     const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
 
-    // --- CAP GROSS TAX AT 58% ---
+    // --- CAP GROSS TAX AT 54% ---
     let preLimitTax = bracketTax + propertyTax;
     if (p.coins > 6) {
-      const maxGrossTax = Math.floor(p.coins * 0.58);
+      const maxGrossTax = Math.floor(p.coins * 0.54); // CHANGED FROM 0.58 TO 0.54
       if (preLimitTax > maxGrossTax) {
         preLimitTax = maxGrossTax;
       }
