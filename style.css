@@ -89,6 +89,18 @@ input[type="number"]:focus, input[type="text"]:focus {
   outline: 2px solid #d4af7f;
 }
 
+/* Always show number input spinners (for Chrome, Safari, Edge) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: auto;
+  margin: 0;
+}
+
+/* For Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 .styled-btn, .calculatorBox button, .popupBox button {
   font-family: 'Lilita One', cursive;
   background: #d4af7f;
