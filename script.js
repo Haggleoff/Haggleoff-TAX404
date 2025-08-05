@@ -422,33 +422,50 @@ function calculateFinalTaxes() {
     p.coins = Number(coinsVal);
     p.properties = Math.max(1, Number(propsVal));
 
+    // Calculate bracket and property tax as before
     const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
     const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
 
-    // --- CAP GROSS TAX AT 54% ---
-    let preLimitTax = bracketTax + propertyTax;
-    if (p.coins > 6) {
-      const maxGrossTax = Math.floor(p.coins * 0.54); // CHANGED FROM 0.58 TO 0.54
-      if (preLimitTax > maxGrossTax) {
-        preLimitTax = maxGrossTax;
+    let grossTax = bracketTax + propertyTax;
+    let capTax = Math.floor(p.coins * 0.54);
+
+    let baseTax = grossTax < capTax ? grossTax : capTax;
+
+    const postBreakTax = Math.max(0, baseTax - (p.streaks + p.powerCards));
+    p.tax = Math.min(postBreakTax, p.coins);
+
+    // Calculate AMT if deductions reduce tax to 0 and coins are in the target brackets
+    let amtApplied = false;
+    let amtValue = 0;
+    let amtPercentString = "";
+    if (p.tax === 0) {
+      if (p.coins >= 34 && p.coins <= 39) {
+        amtApplied = true;
+        amtValue = Math.floor(p.coins * 0.03);
+        amtPercentString = "3%";
+        p.tax = amtValue;
+      } else if (p.coins >= 40) {
+        amtApplied = true;
+        amtValue = Math.floor(p.coins * 0.05);
+        amtPercentString = "5%";
+        p.tax = amtValue;
       }
     }
 
-    const postBreakTax = Math.max(0, preLimitTax - (p.streaks + p.powerCards));
-    p.tax = Math.min(postBreakTax, p.coins);
-
-    const avoided = Math.max(0, preLimitTax - p.tax);
-    const beforeRate = p.coins ? Math.round((preLimitTax / p.coins) * 100) : 0;
+    const avoided = Math.max(0, baseTax - p.tax);
+    const beforeRate = p.coins ? Math.round((baseTax / p.coins) * 100) : 0;
     const afterRate = p.coins ? Math.round((p.tax / p.coins) * 100) : 0;
     const netIncome = p.coins - p.tax;
 
     summary.innerHTML += `
       <p>
-        <span class="player-name">${p.name}</span><br>
+        <span class="player-name">${p.name}</span>
+        ${amtApplied ? `<span style="color:#dc143c; font-weight:bold;">AMT Triggered</span>` : ""}<br>
         Coins: ${p.coins}, Properties: ${p.properties}<br>
-        <strong>Gross Tax: ${preLimitTax}</strong><br>
+        <strong>Gross Tax: ${baseTax}</strong><br>
         <span style="font-weight:bold; color:#d4af7f;">Effective Rate: ${beforeRate}% → ${afterRate}%</span><br>
         Deductions: ${avoided}<br>
+        ${amtApplied ? `<span style="font-weight:bold; color:#dc143c;">AMT: ${amtValue} (${amtPercentString})</span><br>` : ""}
         <span style="font-weight:bold; color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
         <span style="font-weight:bold; color:#d4af7f;">Net Income: ${netIncome}</span><br>
         Audit Risk: ${getAuditRiskLevel(p)}<br>
