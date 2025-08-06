@@ -628,6 +628,10 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
   } else {
     msg.innerHTML = message.replace(/\n/g, "<br>");
   }
+  // Make the popup scrollable on overflow for mobile/small screens
+  msg.style.maxHeight = "75vh";
+  msg.style.overflowY = "auto";
+
   overlay.style.display = "flex";
 
   if (typeof callback !== "function") {
