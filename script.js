@@ -3,7 +3,6 @@ let currentPlayerIndex = 0;
 let timerInterval = null;
 let timeLeft = 60;
 let timerRunningState = true;
-// Track disallowed normal cards per player (for charity cancels)
 let disallowedNormalCards = [];
 
 function startTimer() {
@@ -81,7 +80,6 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
     properties: 0,
     tax: 0
   }));
-  // Initialize disallowed normal cards array
   disallowedNormalCards = Array(players.length).fill(0);
   document.getElementById("playerSetupBox").style.display = "none";
   const n = players.length;
@@ -134,7 +132,7 @@ function handlePlayerSwitch(el) {
   const selectedIndex = Number(el.value);
   if (selectedIndex === currentPlayerIndex) return;
   customPopup(
-    `End <span class="player-name">${players[currentPlayerIndex].name}</span>'s turn and switch to <span class="player-name">${players[selectedIndex].name}</span>?`, 
+    `End <span class="player-name">${players[currentPlayerIndex].name}</span>'s turn and switch to <span class="player-name">${players[selectedIndex].name}</span>?`,
     function(confirm) {
       if (confirm) {
         stopTimer();
@@ -265,9 +263,7 @@ function showDonateOrCharityPopup() {
       if (choice === true) {
         loadCalculator();
       } else {
-        // Charity cancel logic (disallow normal cards in progress)
         if (players[currentPlayerIndex].progress > 0) {
-          // Add the disallowed cards to disallowedNormalCards
           disallowedNormalCards[currentPlayerIndex] += players[currentPlayerIndex].progress;
         }
         players[currentPlayerIndex].progress = 0;
@@ -674,6 +670,10 @@ function customHTMLPopup(message, html, callback) {
   const noBtn = document.getElementById("customPopupNo");
 
   msg.innerHTML = `${message}<br><br>${html}<br><br><button id="customCloseBtn">Close</button>`;
+  // Make the popup scrollable on overflow for mobile/small screens
+  msg.style.maxHeight = "75vh";
+  msg.style.overflowY = "auto";
+
   overlay.style.display = "flex";
   yesBtn.style.display = "none";
   noBtn.style.display = "none";
