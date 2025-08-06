@@ -3,8 +3,9 @@ let currentPlayerIndex = 0;
 let timerInterval = null;
 let timeLeft = 60;
 let timerRunningState = true;
+// Track disallowed normal cards per player (for charity cancels)
+let disallowedNormalCards = [];
 
-// --- TIMER LOGIC ---
 function startTimer() {
   if (timerInterval) return;
   timerInterval = setInterval(() => {
@@ -80,6 +81,8 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
     properties: 0,
     tax: 0
   }));
+  // Initialize disallowed normal cards array
+  disallowedNormalCards = Array(players.length).fill(0);
   document.getElementById("playerSetupBox").style.display = "none";
   const n = players.length;
   let setupMsg = `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">Reloading this page will reset your progress.</span><br><br>`;
@@ -173,7 +176,6 @@ function initializeTurn() {
   showDonateOrCharityPopup();
 }
 
-// --- PICK PLAYER MODAL ---
 function pickPlayerPopup() {
   const dropdownHtml = `<select id="turnPlayerSelector">
     ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
@@ -215,7 +217,6 @@ function pickPlayerPopup() {
   );
 }
 
-// --- PLAYER TURN POPUP ---
 function showDonateOrCharityPopup() {
   timerRunningState = true;
   startTimer();
@@ -245,7 +246,7 @@ function showDonateOrCharityPopup() {
       <strong>Current Streak Progress:</strong>
       ${renderCardProgress(player.progress) || "<span style='color:#bbb;'>No cards in streak.</span>"}
       <br>
-      <span style="font-family:'Lilita One'; color:#d4af7f;">
+      <span style="font-family:'Lilita One'; color: #d4af7f;">
         Tax Breaks Earned: ${player.streaks + player.powerCards}
       </span>
     </div>
@@ -264,6 +265,11 @@ function showDonateOrCharityPopup() {
       if (choice === true) {
         loadCalculator();
       } else {
+        // Charity cancel logic (disallow normal cards in progress)
+        if (players[currentPlayerIndex].progress > 0) {
+          // Add the disallowed cards to disallowedNormalCards
+          disallowedNormalCards[currentPlayerIndex] += players[currentPlayerIndex].progress;
+        }
         players[currentPlayerIndex].progress = 0;
         showDonateOrCharityPopup();
       }
@@ -277,7 +283,6 @@ function showDonateOrCharityPopup() {
     updatePauseButtonState();
     attachPauseButtonHandler();
 
-    // -- FIX: Attach Pick Player handler --
     const pickBtn = document.getElementById("popupPickPlayerBtn");
     if (pickBtn) {
       pickBtn.onclick = function() {
@@ -285,7 +290,6 @@ function showDonateOrCharityPopup() {
       };
     }
 
-    // Endgame button logic (optional)
     const yesBtn = document.getElementById("customPopupYes");
     const noBtn = document.getElementById("customPopupNo");
     const overlay = document.getElementById("customPopupOverlay");
@@ -322,7 +326,6 @@ function loadCalculator() {
   `;
 }
 
-// --- DONATION LOGIC ---
 function confirmTurn() {
   const normalVal = document.getElementById("normal").value.trim();
   const powerVal = document.getElementById("power").value.trim();
@@ -352,7 +355,6 @@ function confirmTurn() {
   showDonateOrCharityPopup();
 }
 
-// --- ENDGAME SECTION ---
 function showEndgame() {
   customPopup("Is the game over? Ready for final taxes?", function(confirm) {
     if (confirm) {
@@ -387,9 +389,7 @@ function loadEndgame() {
   `;
 }
 
-// --- UPDATED TAX BRACKET MESSAGE FUNCTION ---
 function getTaxBracketMessage(coins, properties) {
-  // New satirical message if coins <= 6 and more than 3 properties
   if (coins <= 6 && properties > 3) return "Broke on paper, rich in acres.";
   if (coins <= 6) return "Enjoy tax-free poverty.";
   if (coins <= 14) return "The poor get crushed.";
@@ -422,7 +422,6 @@ function calculateFinalTaxes() {
     p.coins = Number(coinsVal);
     p.properties = Math.max(1, Number(propsVal));
 
-    // Calculate bracket and property tax as before
     const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
     const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
 
@@ -434,7 +433,6 @@ function calculateFinalTaxes() {
     const postBreakTax = Math.max(0, baseTax - (p.streaks + p.powerCards));
     p.tax = Math.min(postBreakTax, p.coins);
 
-    // Calculate AMT if deductions reduce tax to 0 and coins are in the target brackets
     let amtApplied = false;
     let amtValue = 0;
     let amtPercentString = "";
@@ -464,17 +462,108 @@ function calculateFinalTaxes() {
         Coins: ${p.coins}, Properties: ${p.properties}<br>
         <strong>Gross Tax: ${baseTax}</strong><br>
         <span style="font-weight:bold; color:#d4af7f;">Effective Rate: ${beforeRate}% → ${afterRate}%</span><br>
-        Deductions: ${avoided}<br>
+        Tax Avoided: ${avoided}<br>
         ${amtApplied ? `<span style="font-weight:bold; color:#dc143c;">AMT: ${amtValue} (${amtPercentString})</span><br>` : ""}
         <span style="font-weight:bold; color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
         <span style="font-weight:bold; color:#d4af7f;">Net Income: ${netIncome}</span><br>
         Audit Risk: ${getAuditRiskLevel(p)}<br>
-        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins, p.properties)}</em>
+        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins, p.properties)}</em><br>
+        <a href="#" onclick="showTaxBreakdown(${i}); return false;" style="color:#f1f1f1; text-decoration:underline; font-style:italic;">More Info</a>
       </p>
     `;
   });
 
   determineWinner();
+}
+
+function showTaxBreakdown(playerIndex) {
+  const p = players[playerIndex];
+
+  const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
+  const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
+  let grossTax = bracketTax + propertyTax;
+  let capTax = Math.floor(p.coins * 0.54);
+  let baseTax = grossTax < capTax ? grossTax : capTax;
+  const breaks = p.streaks + p.powerCards;
+  const postBreakTax = Math.max(0, baseTax - breaks);
+  let tax = Math.min(postBreakTax, p.coins);
+
+  let amtApplied = false;
+  let amtValue = 0;
+  let amtPercentString = "";
+  let amtExplanation = "";
+  if (tax === 0) {
+    if (p.coins >= 34 && p.coins <= 39) {
+      amtApplied = true;
+      amtValue = Math.floor(p.coins * 0.03);
+      amtPercentString = "3%";
+      tax = amtValue;
+      amtExplanation = "<i>The Alternative Minimum Tax is a penalty imposed on wealthy taxpayers who reduced their tax bill to zero—because even loopholes have limits.</i>";
+    } else if (p.coins >= 40) {
+      amtApplied = true;
+      amtValue = Math.floor(p.coins * 0.05);
+      amtPercentString = "5%";
+      tax = amtValue;
+      amtExplanation = "<i>The Alternative Minimum Tax is a penalty imposed on wealthy taxpayers who reduced their tax bill to zero—because even loopholes have limits.</i>";
+    }
+  }
+
+  const avoided = Math.max(0, baseTax - tax);
+  const beforeRate = p.coins ? Math.round((baseTax / p.coins) * 100) : 0;
+  const afterRate = p.coins ? Math.round((tax / p.coins) * 100) : 0;
+  const netIncome = p.coins - tax;
+
+  let streaksEarned = p.streaks;
+  let donationsDetails = `
+    <ul style="text-align:left;">
+      <li>Normal Cards Donated: <strong>${p.streaks * 5 + p.progress}</strong></li>
+      <li>Streaks Earned: <strong>${streaksEarned}</strong></li>
+      <li>Power Cards or Cash Donated: <strong>${p.powerCards}</strong></li>
+      <li><span style="color:#d4af7f;">Total Tax Breaks Earned:</span> <strong style="color:#d4af7f;">${breaks}</strong></li>
+    </ul>
+  `;
+
+  let breakdownHTML = `
+    <div style="text-align:left;">
+      <span class="player-name">${p.name}</span><br>
+      <strong>Income (Haggleoffs):</strong> ${p.coins}<br>
+      <strong>Properties:</strong> ${p.properties}<br>
+      <strong>Donations:</strong> ${donationsDetails}
+      <hr>
+      <strong>Bracket Tax:</strong> ${bracketTax}<br>
+      <strong>Property Tax:</strong> ${propertyTax} (${p.properties >= 4 ? "2 per property" : p.coins > 6 ? "1 per property" : "0"})
+      <br>
+      <strong style="color:#d4af7f;">Gross Tax:</strong> <span style="color:#d4af7f;">${grossTax}</span><br>
+      <strong>Maximum Tax Ceiling:</strong> ${capTax}<br>
+      <span style="font-size:0.98em; color:#888;"><i>A built-in cap that ensures your tax never exceeds 54% of your gross income.</i></span><br>
+      <strong>Base Tax Applied:</strong> ${baseTax}<br>
+      <strong>Deductions from Donations:</strong> ${breaks} (Tax Breaks)<br>
+      <strong>Tax after Deductions:</strong> ${Math.max(0, baseTax - breaks)}<br>
+      ${amtApplied ? `<strong style="color:#dc143c;">AMT Applied:</strong> ${amtValue} (${amtPercentString})<br><span style="font-size:0.99em; color:#dc143c;">${amtExplanation}</span><br>` : ""}
+      <strong style="color:#d4af7f;">Tax Owed:</strong> <span style="color:#d4af7f;">${tax}</span><br>
+      <strong style="color:#d4af7f;">Net Income:</strong> <span style="color:#d4af7f;">${netIncome}</span><br>
+      <strong>Effective Rate Before Deductions:</strong> ${beforeRate}%<br>
+      <strong>Effective Rate After Deductions:</strong> ${afterRate}%<br>
+      <strong style="color:#d4af7f;">Tax Avoided:</strong> <span style="color:#d4af7f;">${avoided}</span><br>
+      <strong>Audit Risk:</strong> ${getAuditRiskLevel(p)}<br>
+      <hr>
+      <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins, p.properties)}</em>
+    </div>
+  `;
+
+  customHTMLPopup(
+    `<h2 style="font-family:'Lilita One'; color:#d4af7f;">Tax Overview Statement</h2>`,
+    breakdownHTML,
+    () => {
+      const closeBtn = document.getElementById("customCloseBtn");
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          document.getElementById("customPopupOverlay").style.display = "none";
+          calculateFinalTaxes();
+        };
+      }
+    }
+  );
 }
 
 function getAuditRiskLevel(player) {
@@ -525,13 +614,13 @@ function backToNameInput() {
   document.getElementById("playerSetupBox").style.display = "block";
   document.getElementById("mainGameContainer").innerHTML = "";
   players = [];
+  disallowedNormalCards = [];
   currentPlayerIndex = 0;
   stopTimer();
   timerRunningState = true;
   timeLeft = 60;
 }
 
-// --- POPUPS/UTILS ---
 function customPopup(message, callback, isHtml = false, yesText = "Yes", noText = "No", okOnly = false) {
   const overlay = document.getElementById("customPopupOverlay");
   const msg = document.getElementById("customPopupMessage");
@@ -589,7 +678,6 @@ function customHTMLPopup(message, html, callback) {
   yesBtn.style.display = "none";
   noBtn.style.display = "none";
 
-  const closeBtn = document.getElementById("customCloseBtn");
   if (typeof callback === "function") callback();
 }
 
@@ -608,5 +696,4 @@ function renderCardProgress(progress) {
   return `<div style="display: flex; justify-content: center; margin-top: 1rem;">${blocks}</div>`;
 }
 
-// --- Start timer on load ---
 startTimer();
