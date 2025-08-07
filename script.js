@@ -1,45 +1,66 @@
-// --- Player Data ---
 let players = [];
 let currentPlayerIndex = 0;
-let timers = [];
+let timerInterval = null;
+let timeLeft = 60;
+let timerRunningState = true;
 let disallowedNormalCards = [];
 
-// --- Utility Functions for Timer ---
-function initializeTimers(n) {
-  timers = [];
-  for (let i = 0; i < n; i++) {
-    timers.push({ timeLeft: 60, interval: null, running: false });
-  }
-}
-
-function startPlayerTimer(idx) {
-  stopAllTimers();
-  timers[idx].timeLeft = 60;
-  if (timers[idx].interval) clearInterval(timers[idx].interval);
-  timers[idx].running = true;
-  timers[idx].interval = setInterval(() => {
-    if (timers[idx].running && timers[idx].timeLeft > 0) {
-      timers[idx].timeLeft--;
-      updatePlayerCardTimer(idx);
-      if (timers[idx].timeLeft === 0) {
-        timers[idx].running = false;
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    if (timerRunningState && timeLeft > 0) {
+      timeLeft--;
+      updatePopupTimerDisplay();
+      if (timeLeft <= 0) {
+        timerRunningState = false;
+        updatePauseButtonState();
       }
     }
   }, 1000);
-  updatePlayerCardTimer(idx);
 }
 
-function stopAllTimers() {
-  timers.forEach(t => {
-    if (t.interval) clearInterval(t.interval);
-    t.running = false;
-    t.interval = null;
-  });
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
 }
 
-function updatePlayerCardTimer(idx) {
-  const timerDiv = document.getElementById(`playerTimer_${idx}`);
-  if (timerDiv) timerDiv.innerText = timers[idx].timeLeft;
+function updatePopupTimerDisplay() {
+  const timerDivs = document.querySelectorAll("#playerTimer");
+  timerDivs.forEach(div => div.innerText = timeLeft);
+}
+
+function updatePauseButtonState() {
+  const pauseBtn = document.getElementById("pauseResumeBtn");
+  if (!pauseBtn) return;
+  if (timeLeft <= 0) {
+    pauseBtn.innerText = "Restart";
+    pauseBtn.style.backgroundColor = "";
+  } else if (timerRunningState) {
+    pauseBtn.innerText = "Pause";
+    pauseBtn.style.backgroundColor = "#947c52";
+  } else {
+    pauseBtn.innerText = "Resume";
+    pauseBtn.style.backgroundColor = "";
+  }
+}
+
+function attachPauseButtonHandler() {
+  const pauseBtn = document.getElementById("pauseResumeBtn");
+  if (!pauseBtn) return;
+  pauseBtn.onclick = function () {
+    if (pauseBtn.innerText === "Pause") {
+      timerRunningState = false;
+      updatePauseButtonState();
+    } else if (pauseBtn.innerText === "Resume") {
+      timerRunningState = true;
+      updatePauseButtonState();
+    } else if (pauseBtn.innerText === "Restart") {
+      timeLeft = 60;
+      timerRunningState = true;
+      updatePopupTimerDisplay();
+      updatePauseButtonState();
+    }
+  };
 }
 
 // --- PLAYER ENTRY & SETUP ---
@@ -60,225 +81,232 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
     tax: 0
   }));
   disallowedNormalCards = Array(players.length).fill(0);
-  initializeTimers(players.length);
   document.getElementById("playerSetupBox").style.display = "none";
-
+  const n = players.length;
   let setupMsg = `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">Reloading this page will reset your progress.</span><br><br>`;
   setupMsg += `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">
       After each player receives 1 free starting property during Setup,
     </span><br>
     <span style="font-family: 'Lilita One', cursive; color: #d4af7f;">
-      Property Stack size: ${players.length + 1}
+      Property Stack size: ${n + 1}
     </span>`;
   customPopup(setupMsg, function() {
-    showPlayerCarousel();
+    showStartOptions();
   }, true, "Yes", "No", true);
 });
 
-// --- PLAYER CAROUSEL (Flex row, animated, only prev/next/active visible) ---
-let carouselStartX = 0;
-let carouselDeltaX = 0;
-let carouselIsDragging = false;
+let cachedDropdownHTML = "";
 
-function showPlayerCarousel() {
-  renderCarousel();
+function showStartOptions() {
+  cachedDropdownHTML = buildPlayerDropdownHTML();
+  document.getElementById("mainGameContainer").innerHTML = `
+    <div class="calculatorBox">
+      <h2>Choose Starting Player</h2>
+      <button onclick="manualStarter()">Select Starting Player</button>
+      <button onclick="randomStarter()">Random Player</button>
+    </div>
+  `;
+}
+
+function buildPlayerDropdownHTML() {
+  return `<select id="playerSelector" onchange="handlePlayerSwitch(this)">
+    ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
+  </select>`;
+}
+
+function manualStarter() {
+  const html = cachedDropdownHTML + `<br><br><button onclick="confirmManualStarter()">Confirm</button>`;
+  customHTMLPopup("Select starting player:", html, () => {});
+}
+
+function confirmManualStarter() {
+  const select = document.getElementById("playerSelector");
+  currentPlayerIndex = Number(select.value);
+  document.getElementById("customPopupOverlay").style.display = "none";
+  timeLeft = 60;
+  timerRunningState = true;
+  initializeTurn();
+}
+
+function handlePlayerSwitch(el) {
+  const selectedIndex = Number(el.value);
+  if (selectedIndex === currentPlayerIndex) return;
+  customPopup(
+    `End <span class="player-name">${players[currentPlayerIndex].name}</span>'s turn and switch to <span class="player-name">${players[selectedIndex].name}</span>?`,
+    function(confirm) {
+      if (confirm) {
+        stopTimer();
+        timeLeft = 60;
+        currentPlayerIndex = selectedIndex;
+        timerRunningState = true;
+        initializeTurn();
+      } else {
+        el.value = currentPlayerIndex;
+      }
+    },
+    true
+  );
+}
+
+function randomStarter() {
+  document.getElementById("mainGameContainer").innerHTML = `
+    <div class="calculatorBox">
+      <h2>🔒 Appointing Board Chair...</h2>
+      <p><em>Preparing randomized selection. Cue suspense...</em></p>
+    </div>
+  `;
   setTimeout(() => {
-    startPlayerTimer(currentPlayerIndex);
-    attachDonateCharityHandlers();
-    attachSwipeHandlers();
-    window.addEventListener('resize', updateCarouselTransform);
+    currentPlayerIndex = Math.floor(Math.random() * players.length);
+    const name = players[currentPlayerIndex].name;
+    document.getElementById("mainGameContainer").innerHTML = `
+      <div class="calculatorBox">
+        <h2>🎉 Starting Player is...</h2>
+        <h1><span class="player-name">${name}</span></h1>
+        <button onclick="initializeTurn()">START</button>
+      </div>
+    `;
+    timeLeft = 60;
+    timerRunningState = true;
+  }, 3000);
+}
+
+function initializeTurn() {
+  showDonateOrCharityPopup();
+}
+
+function pickPlayerPopup() {
+  const dropdownHtml = `<select id="turnPlayerSelector">
+    ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
+  </select>`;
+  const html = `
+    ${dropdownHtml}
+    <br><br>
+    <button id="confirmPickPlayer" class="styled-btn">Confirm</button>
+  `;
+  customHTMLPopup(
+    `<div style="text-align:center; font-family:'Lilita One'; font-size:1.5rem; margin-bottom:1rem;">
+      <span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn
+    </div>
+    Pick a player to take their turn:`,
+    html,
+    () => {
+      const confirmBtn = document.getElementById("confirmPickPlayer");
+      const selector = document.getElementById("turnPlayerSelector");
+      if (confirmBtn && selector) {
+        confirmBtn.onclick = () => {
+          if (Number(selector.value) !== currentPlayerIndex) {
+            stopTimer();
+            currentPlayerIndex = Number(selector.value);
+            timeLeft = 60;
+            timerRunningState = true;
+          }
+          document.getElementById("customPopupOverlay").style.display = "none";
+          initializeTurn();
+        };
+      }
+      const closeBtn = document.getElementById("customCloseBtn");
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          document.getElementById("customPopupOverlay").style.display = "none";
+          showDonateOrCharityPopup();
+        };
+      }
+    }
+  );
+}
+
+function showDonateOrCharityPopup() {
+  timerRunningState = true;
+  startTimer();
+
+  const player = players[currentPlayerIndex];
+  const popupTitleHTML = `
+    <div style="text-align:center; font-family:'Lilita One'; font-size:1.5rem; margin-bottom:1rem;">
+      <span class="player-name">${player.name}</span>'s Turn
+    </div>
+  `;
+  const titleRowHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.5rem;">
+      <button id="popupPickPlayerBtn" class="styled-btn" style="margin-left:0.25rem;">Pick Player</button>
+      <span id="popupDropdownContainer" style="display:none; margin-left:0.5rem;"></span>
+    </div>
+  `;
+  const timerHTML = `
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 1rem 0 1rem 0;">
+      <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">${timeLeft}</p>
+      <div style="display:flex; gap:0.5rem;">
+        <button id="pauseResumeBtn" class="styled-btn">Pause</button>
+      </div>
+    </div>
+  `;
+  const streakProgressHTML = `
+    <div style="margin-bottom:1rem;">
+      <strong>Current Streak Progress:</strong>
+      ${renderCardProgress(player.progress) || "<span style='color:#bbb;'>No cards in streak.</span>"}
+      <br>
+      <span style="font-family:'Lilita One'; color: #d4af7f;">
+        Tax Breaks Earned: ${player.streaks + player.powerCards}
+      </span>
+    </div>
+  `;
+  const popupContent = `
+    ${popupTitleHTML}
+    ${titleRowHTML}
+    ${timerHTML}
+    Did <span class="player-name">${player.name}</span> <strong>Donate</strong> or <strong>Take Charity</strong>?<br><br>
+    ${streakProgressHTML}
+    <div id="endgameBtnContainer"></div>
+  `;
+  customPopup(
+    popupContent,
+    function(choice) {
+      if (choice === true) {
+        loadCalculator();
+      } else {
+        if (players[currentPlayerIndex].progress > 0) {
+          disallowedNormalCards[currentPlayerIndex] += players[currentPlayerIndex].progress;
+        }
+        players[currentPlayerIndex].progress = 0;
+        showDonateOrCharityPopup();
+      }
+    },
+    true,
+    "Donate",
+    "Took Charity"
+  );
+  setTimeout(() => {
+    updatePopupTimerDisplay();
+    updatePauseButtonState();
+    attachPauseButtonHandler();
+
+    const pickBtn = document.getElementById("popupPickPlayerBtn");
+    if (pickBtn) {
+      pickBtn.onclick = function() {
+        pickPlayerPopup();
+      };
+    }
+
+    const yesBtn = document.getElementById("customPopupYes");
+    const noBtn = document.getElementById("customPopupNo");
+    const overlay = document.getElementById("customPopupOverlay");
+    if (yesBtn && noBtn && overlay) {
+      const oldEndgame = document.getElementById("endgameFromTurn");
+      if (oldEndgame) oldEndgame.remove();
+      const endgameBtn = document.createElement("button");
+      endgameBtn.type = "button";
+      endgameBtn.id = "endgameFromTurn";
+      endgameBtn.className = "styled-btn popup-action-btn";
+      endgameBtn.innerText = "Endgame Taxes";
+      endgameBtn.style.backgroundColor = "#947c52";
+      endgameBtn.onclick = function() {
+        overlay.style.display = "none";
+        showEndgame();
+      };
+      noBtn.parentNode.insertBefore(endgameBtn, noBtn.nextSibling);
+    }
   }, 50);
 }
 
-function renderCarousel() {
-  const container = document.getElementById("mainGameContainer");
-  container.innerHTML = `
-    <div id="playerCarouselWrap">
-      <div id="playerCarousel">
-        ${players.map((p, i) => {
-          let cardClass = "playerCard";
-          if (i === currentPlayerIndex) cardClass += " activeCard";
-          else if (i === (currentPlayerIndex - 1 + players.length) % players.length) cardClass += " prevCard";
-          else if (i === (currentPlayerIndex + 1) % players.length) cardClass += " nextCard";
-          else cardClass += " farCard";
-          return `
-            <div class="${cardClass}" data-index="${i}">
-              <div class="player-name">${p.name}</div>
-              <div class="streak-section">
-                <div class="streak-progress-verbiage"><strong>Current Streak Progress:</strong></div>
-                ${p.progress > 0
-                  ? renderCardProgress(p.progress)
-                  : `<span class="no-cards-verbiage">No cards in streak.</span>`
-                }
-              </div>
-              <div class="tax-breaks">
-                Tax Breaks Earned: ${p.streaks + p.powerCards}
-              </div>
-              <div class="timer-section">
-                <p id="playerTimer_${i}">${timers[i].timeLeft}</p>
-              </div>
-              <div class="card-buttons">
-                <button id="donateBtn_${i}" class="styled-btn">Donate</button>
-                <button id="charityBtn_${i}" class="styled-btn">Take</button>
-              </div>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    </div>
-    <div style="margin-top:1.5rem; text-align:center;">
-      <button id="endgameTaxesBtn" class="styled-btn popup-action-btn" style="background-color:#947c52;">Endgame Taxes</button>
-    </div>
-  `;
-  setTimeout(updateCarouselTransform, 0);
-
-  // Make cards clickable to bring them to focus
-  setTimeout(() => {
-    document.querySelectorAll('.playerCard').forEach(card => {
-      card.onclick = function(e) {
-        const idx = parseInt(this.getAttribute('data-index'));
-        if (idx !== currentPlayerIndex) {
-          moveToPlayer(idx);
-        }
-      }
-    });
-  }, 0);
-}
-
-function updateCarouselTransform() {
-  const carousel = document.getElementById("playerCarousel");
-  const cards = document.querySelectorAll('.playerCard');
-  if (carousel && cards.length) {
-    const active = cards[currentPlayerIndex];
-    const cardWidth = active.offsetWidth;
-    const cardStyle = window.getComputedStyle(active);
-    const cardMarginLeft = parseFloat(cardStyle.marginLeft);
-    const viewportWidth = window.innerWidth;
-    const cardCenter = active.offsetLeft + cardMarginLeft + cardWidth / 2;
-    const translateX = (viewportWidth / 2) - cardCenter;
-    carousel.style.transform = `translateX(${translateX}px)`;
-    startPlayerTimer(currentPlayerIndex);
-  }
-  setTimeout(() => {
-    attachDonateCharityHandlers();
-  }, 20);
-}
-
-function attachDonateCharityHandlers() {
-  players.forEach((_, i) => {
-    const donateBtn = document.getElementById(`donateBtn_${i}`);
-    const charityBtn = document.getElementById(`charityBtn_${i}`);
-    if (donateBtn) {
-      donateBtn.onclick = () => {
-        if (i === currentPlayerIndex) {
-          stopAllTimers();
-          loadCalculator();
-        }
-      };
-    }
-    if (charityBtn) {
-      charityBtn.onclick = () => {
-        if (i === currentPlayerIndex) {
-          if (players[i].progress > 0) {
-            disallowedNormalCards[i] += players[i].progress;
-          }
-          players[i].progress = 0;
-          moveToNextPlayer();
-        }
-      };
-    }
-  });
-  const endBtn = document.getElementById("endgameTaxesBtn");
-  if (endBtn) {
-    endBtn.onclick = () => showEndgame();
-  }
-}
-
-function attachSwipeHandlers() {
-  const wrap = document.getElementById("playerCarouselWrap");
-  if (!wrap) return;
-
-  wrap.onmousedown = null;
-  wrap.ontouchstart = null;
-  wrap.onmousemove = null;
-  wrap.ontouchmove = null;
-  wrap.onmouseup = null;
-  wrap.ontouchend = null;
-  wrap.onmouseleave = null;
-
-  // Desktop mouse events
-  wrap.onmousedown = function(e) {
-    carouselIsDragging = true;
-    carouselStartX = e.clientX;
-    carouselDeltaX = 0;
-  };
-  wrap.onmousemove = function(e) {
-    if (!carouselIsDragging) return;
-    carouselDeltaX = e.clientX - carouselStartX;
-  };
-  wrap.onmouseup = function(e) {
-    if (!carouselIsDragging) return;
-    carouselIsDragging = false;
-    handleSwipeEnd(carouselDeltaX);
-  };
-  wrap.onmouseleave = function(e) {
-    if (!carouselIsDragging) return;
-    carouselIsDragging = false;
-    handleSwipeEnd(carouselDeltaX);
-  };
-
-  // Touch events
-  wrap.ontouchstart = function(e) {
-    if (e.touches.length === 1) {
-      carouselIsDragging = true;
-      carouselStartX = e.touches[0].clientX;
-      carouselDeltaX = 0;
-    }
-  };
-  wrap.ontouchmove = function(e) {
-    if (!carouselIsDragging || e.touches.length !== 1) return;
-    carouselDeltaX = e.touches[0].clientX - carouselStartX;
-  };
-  wrap.ontouchend = function(e) {
-    if (!carouselIsDragging) return;
-    carouselIsDragging = false;
-    handleSwipeEnd(carouselDeltaX);
-  };
-}
-
-function handleSwipeEnd(deltaX) {
-  const threshold = 60;
-  if (deltaX > threshold) {
-    // Swipe right: go to previous player, wrap if needed (infinite)
-    let prev = currentPlayerIndex - 1;
-    if (prev < 0) prev = players.length - 1;
-    moveToPlayer(prev);
-  } else if (deltaX < -threshold) {
-    // Swipe left: go to next player, wrap if needed (infinite)
-    let next = currentPlayerIndex + 1;
-    if (next >= players.length) next = 0;
-    moveToPlayer(next);
-  } else {
-    updateCarouselTransform();
-  }
-}
-
-function moveToPlayer(idx) {
-  if (idx === currentPlayerIndex) {
-    updateCarouselTransform();
-    return;
-  }
-  currentPlayerIndex = idx;
-  renderCarousel(); // ensures correct focus and updates .activeCard
-}
-
-function moveToNextPlayer() {
-  let next = currentPlayerIndex + 1;
-  if (next >= players.length) next = 0;
-  moveToPlayer(next);
-}
-
-// --- DONATE CALCULATOR ---
 function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
@@ -320,24 +348,22 @@ function confirmTurn() {
   p.streaks += completedStreaks;
   p.progress = p.progress % 5;
   p.powerCards += powerNum;
-
-  showPlayerCarousel();
-  moveToNextPlayer();
+  showDonateOrCharityPopup();
 }
 
-// --- ENDGAME ---
 function showEndgame() {
   customPopup("Is the game over? Ready for final taxes?", function(confirm) {
     if (confirm) {
       loadEndgame();
     } else {
-      showPlayerCarousel();
+      showDonateOrCharityPopup();
     }
   });
 }
 
 function loadEndgame() {
-  stopAllTimers();
+  stopTimer();
+  timerRunningState = false;
   let blocks = players.map((p, i) => `
     <div class="playerEndgameBlock">
       <h3><span class="player-name">${p.name}</span></h3>
@@ -586,11 +612,10 @@ function backToNameInput() {
   players = [];
   disallowedNormalCards = [];
   currentPlayerIndex = 0;
-  stopAllTimers();
-  timers = [];
+  stopTimer();
+  timerRunningState = true;
+  timeLeft = 60;
 }
-
-// --- POPUPS ---
 
 function customPopup(message, callback, isHtml = false, yesText = "Yes", noText = "No", okOnly = false) {
   const overlay = document.getElementById("customPopupOverlay");
@@ -603,6 +628,7 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
   } else {
     msg.innerHTML = message.replace(/\n/g, "<br>");
   }
+  // Make the popup scrollable on overflow for mobile/small screens
   msg.style.maxHeight = "75vh";
   msg.style.overflowY = "auto";
 
@@ -648,6 +674,7 @@ function customHTMLPopup(message, html, callback) {
   const noBtn = document.getElementById("customPopupNo");
 
   msg.innerHTML = `${message}<br><br>${html}<br><br><button id="customCloseBtn">Close</button>`;
+  // Make the popup scrollable on overflow for mobile/small screens
   msg.style.maxHeight = "75vh";
   msg.style.overflowY = "auto";
 
@@ -672,3 +699,5 @@ function renderCardProgress(progress) {
   }
   return `<div style="display: flex; justify-content: center; margin-top: 1rem;">${blocks}</div>`;
 }
+
+startTimer();
