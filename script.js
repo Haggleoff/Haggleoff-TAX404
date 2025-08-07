@@ -5,6 +5,23 @@ let timeLeft = 60;
 let timerRunningState = true;
 let disallowedNormalCards = [];
 
+// Prevent double-tap to zoom globally for buttons (extra safety)
+let lastTouch = 0;
+document.addEventListener('touchend', function(e) {
+  if (
+    e.target.closest('button') ||
+    e.target.closest('.styled-btn') ||
+    e.target.closest('.card-btn') ||
+    e.target.closest('.donate-btn-shape')
+  ) {
+    const now = new Date().getTime();
+    if (now - lastTouch <= 350) {
+      e.preventDefault();
+    }
+    lastTouch = now;
+  }
+}, { passive: false });
+
 document.getElementById("playerForm").addEventListener("submit", function(e) {
   e.preventDefault();
   const entered = [...this.querySelectorAll("input[name='playerName']")].filter(input => input.value.trim());

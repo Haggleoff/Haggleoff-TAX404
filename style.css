@@ -4,7 +4,11 @@ body {
   font-family: 'Roboto', Arial, sans-serif;
   margin: 0;
   padding: 0;
+  /* Prevent double-tap zoom and pinch zoom globally (except for accessibility) */
+  touch-action: manipulation;
 }
+
+/* Optionally, if you want to allow pinch-zoom for accessibility, comment out the above and use only below for buttons. */
 
 /* Force Lilita One everywhere it's used to never be bold */
 .lilita, 
@@ -606,4 +610,10 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-bottom: 0.7rem;
   color: #d4af7f;
   text-align: center;
+}
+
+/* Prevent double-tap and pinch-zoom on all buttons */
+button, .styled-btn, .card-btn, .donate-btn-shape {
+  touch-action: manipulation;
+  font-size: 1.1rem; /* ensure at least 16px for mobile */
 }
