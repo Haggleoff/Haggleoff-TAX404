@@ -49,8 +49,8 @@ function showPlayerCards() {
             <span class="player-card-breaks-num">${player.streaks + player.powerCards}</span>
           </div>
           <div class="player-card-actions">
-            <button class="card-btn donate-btn" onclick="donateAction(${i})">Donated</button>
-            <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Received</button>
+            <button class="card-btn donate-btn" onclick="donateAction(${i})">Donate</button>
+            <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Take</button>
           </div>
         </div>
       </div>
@@ -293,7 +293,35 @@ function calculateFinalTaxes() {
     }
   }
 
-  // Compute winner(s) first so we can show this above the cards
+  // Assign coins/properties and calculate taxes for each player before winner calculation
+  for (let i = 0; i < players.length; i++) {
+    const coinsVal = document.getElementById(`coins_${i}`).value.trim();
+    const propsVal = document.getElementById(`props_${i}`).value.trim();
+
+    players[i].coins = Number(coinsVal);
+    players[i].properties = Math.max(1, Number(propsVal));
+
+    // Tax calculation logic (same as below)
+    const p = players[i];
+    const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
+    const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
+    let grossTax = bracketTax + propertyTax;
+    let capTax = Math.floor(p.coins * 0.54);
+    let baseTax = grossTax < capTax ? grossTax : capTax;
+    const postBreakTax = Math.max(0, baseTax - (p.streaks + p.powerCards));
+    p.tax = Math.min(postBreakTax, p.coins);
+
+    // AMT logic
+    if (p.tax === 0) {
+      if (p.coins >= 34 && p.coins <= 39) {
+        p.tax = Math.floor(p.coins * 0.03);
+      } else if (p.coins >= 40) {
+        p.tax = Math.floor(p.coins * 0.05);
+      }
+    }
+  }
+
+  // Compute winner(s) after taxes are fully calculated and assigned
   const netWorths = players.map(p => p.coins - p.tax);
   const maxCoins = Math.max(...netWorths);
   const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
@@ -315,44 +343,43 @@ function calculateFinalTaxes() {
   // Cards layout for final results
   let cardsHtml = "";
   players.forEach((p, i) => {
-    const coinsVal = document.getElementById(`coins_${i}`).value.trim();
-    const propsVal = document.getElementById(`props_${i}`).value.trim();
+    // Re-calculate all breakdowns to display (matches calculation above)
+    const coinsVal = p.coins;
+    const propsVal = p.properties;
 
-    p.coins = Number(coinsVal);
-    p.properties = Math.max(1, Number(propsVal));
-
-    const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
-    const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
+    const bracketTax = coinsVal <= 6 ? 0 : coinsVal <= 14 ? 3 : coinsVal <= 24 ? 5 : coinsVal <= 39 ? 8 : 10;
+    const propertyTax = coinsVal > 6 ? propsVal * (propsVal >= 4 ? 2 : 1) : 0;
 
     let grossTax = bracketTax + propertyTax;
-    let capTax = Math.floor(p.coins * 0.54);
+    let capTax = Math.floor(coinsVal * 0.54);
 
     let baseTax = grossTax < capTax ? grossTax : capTax;
 
-    const postBreakTax = Math.max(0, baseTax - (p.streaks + p.powerCards));
-    p.tax = Math.min(postBreakTax, p.coins);
+    const breaks = p.streaks + p.powerCards;
+    const postBreakTax = Math.max(0, baseTax - breaks);
+    let displayTax = Math.min(postBreakTax, coinsVal);
 
     let amtApplied = false;
     let amtValue = 0;
     let amtPercentString = "";
-    if (p.tax === 0) {
-      if (p.coins >= 34 && p.coins <= 39) {
+    if (displayTax === 0) {
+      if (coinsVal >= 34 && coinsVal <= 39) {
         amtApplied = true;
-        amtValue = Math.floor(p.coins * 0.03);
+        amtValue = Math.floor(coinsVal * 0.03);
         amtPercentString = "3%";
-        p.tax = amtValue;
-      } else if (p.coins >= 40) {
+        displayTax = amtValue;
+      } else if (coinsVal >= 40) {
         amtApplied = true;
-        amtValue = Math.floor(p.coins * 0.05);
+        amtValue = Math.floor(coinsVal * 0.05);
         amtPercentString = "5%";
-        p.tax = amtValue;
+        displayTax = amtValue;
       }
     }
 
-    const avoided = Math.max(0, baseTax - p.tax);
-    const beforeRate = p.coins ? Math.round((baseTax / p.coins) * 100) : 0;
-    const afterRate = p.coins ? Math.round((p.tax / p.coins) * 100) : 0;
-    const netIncome = p.coins - p.tax;
+    const avoided = Math.max(0, baseTax - displayTax);
+    const beforeRate = coinsVal ? Math.round((baseTax / coinsVal) * 100) : 0;
+    const afterRate = coinsVal ? Math.round((displayTax / coinsVal) * 100) : 0;
+    const netIncome = coinsVal - displayTax;
 
     cardsHtml += `
       <div class="final-result-card">
@@ -360,15 +387,15 @@ function calculateFinalTaxes() {
           <div class="final-result-name player-name">${p.name}</div>
           <div class="final-result-content">
             ${amtApplied ? `<span style="color:#dc143c;">AMT Triggered</span><br>` : ""}
-            Coins: <span>${p.coins}</span>, Properties: <span>${p.properties}</span><br>
+            Coins: <span>${coinsVal}</span>, Properties: <span>${propsVal}</span><br>
             Gross Tax: ${baseTax}<br>
             <span style="color:#d4af7f;">Effective Rate: ${beforeRate}% → ${afterRate}%</span><br>
             Tax Avoided: ${avoided}<br>
             ${amtApplied ? `<span style="color:#dc143c;">AMT: ${amtValue} (${amtPercentString})</span><br>` : ""}
-            <span style="color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
+            <span style="color:#d4af7f;">Tax Owed: ${displayTax}</span><br>
             <span style="color:#d4af7f;">Net Income: ${netIncome}</span><br>
             Audit Risk: ${getAuditRiskLevel(p)}<br>
-            <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins, p.properties)}</em><br>
+            <em style="color:#d4af7f;">${getTaxBracketMessage(coinsVal, propsVal)}</em><br>
             <a href="#" onclick="showTaxBreakdown(${i}); return false;" style="color:#f1f1f1; text-decoration:underline; font-style:italic;">More Info</a>
           </div>
         </div>
@@ -491,7 +518,7 @@ function getAuditRiskLevel(player) {
 function exitToSetup() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
-      <h2 class="lilita" style="color:#d4af7f;">Thank you for Haggleoffing...</h2>
+      <h2 class="lilita" style="color: #d4af7f;">Thank you for Haggleoffing...</h2>
       <button onclick="backToNameInput()">Enter New Players</button>
     </div>
   `;
