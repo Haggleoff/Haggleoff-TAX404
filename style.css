@@ -6,52 +6,207 @@ body {
   padding: 0;
 }
 
+/* Header and logo centering */
 #siteHeader {
   text-align: center;
-  margin-top: 1.5rem;
-  margin-bottom: 2rem;
+  margin: 2rem auto 1rem auto;
+  width: 100%;
+  max-width: 100vw;
 }
-
-/* Rectangular, retina-optimized logo for 320x160px */
 #siteLogo {
-  width: 320px;
-  height: 160px;
-  object-fit: contain;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-  background: none;
-  box-shadow: none;
-  border-radius: 16px;
   display: block;
   margin: 0 auto 0.5rem auto;
+  max-width: 320px;
+  height: auto;
+}
+#taxLogoText {
+  text-align: center;
+  margin: 0 auto;
+}
+#siteHeader .tagline,
+#siteHeader p {
+  text-align: center;
+  margin: 0.5rem auto 0 auto;
+  font-style: italic;
+  font-family: 'Roboto';
+  color: #d9d9d9;
+  max-width: 100vw;
 }
 
-@media 
-(-webkit-min-device-pixel-ratio: 2),
-(min-resolution: 192dpi) {
-  #siteLogo {
-    width: 320px;
-    height: 160px;
-    background-size: 320px 160px;
-    /* If you have a 2x logo, swap src via JS or use:
-       background-image: url('logo@2x.png');
-    */
+#mainGameContainer {
+  min-height: 150px;
+}
+
+/* Carousel wrapper */
+#playerCarouselWrap {
+  width: 100vw;
+  max-width: 100vw;
+  padding: 0;
+  margin: 2rem auto 0 auto;
+  overflow-x: hidden;
+  position: relative;
+  touch-action: pan-x;
+}
+
+/* Carousel row, flex with transform for animation */
+#playerCarousel {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(.42,0,.58,1);
+  will-change: transform;
+  align-items: stretch;
+  position: relative;
+  height: 420px;
+}
+
+/* Poker/playing card look */
+.playerCard {
+  flex: 0 0 78vw;
+  max-width: 320px;
+  min-width: 180px;
+  min-height: 260px;
+  max-height: 95vh;
+  background: #191919;
+  border-radius: 18px;
+  margin: 0 -12vw;
+  box-shadow: 0 6px 28px #000b;
+  opacity: 0.65;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 1.2rem 1rem 1rem 1rem;
+  overflow: visible;
+  pointer-events: none;
+  cursor: pointer;
+  transition:
+    opacity 0.23s,
+    box-shadow 0.23s,
+    transform 0.23s,
+    margin 0.33s cubic-bezier(.42,0,.58,1);
+}
+
+.playerCard.activeCard {
+  border: 2.5px solid #d4af7f;
+  opacity: 1;
+  box-shadow: 0 10px 36px #000d;
+  z-index: 3;
+  margin: 0 2vw;
+  pointer-events: auto;
+  cursor: default;
+  transform: scale(1) translateY(0);
+}
+
+.playerCard.prevCard,
+.playerCard.nextCard {
+  opacity: 0.85;
+  transform: scale(0.96) translateY(0);
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.playerCard.farCard {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transform: scale(0.93) translateY(40px);
+  filter: blur(4px);
+}
+
+.playerCard .player-name {
+  font-family: 'Lilita One', cursive;
+  color: #d4af7f;
+  font-size: 1.3rem;
+  text-align: center;
+  margin: 0 auto 1rem auto; /* More space below name */
+  display: block;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+
+.playerCard .streak-section {
+  margin-bottom: 1.1rem; /* More space between streak and tax breaks */
+}
+
+.playerCard .streak-progress-verbiage {
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+  text-align: center;
+}
+
+.playerCard .tax-breaks {
+  color: #d4af7f;
+  font-family: 'Lilita One', cursive;
+  font-size: .98rem;
+  text-align: center;
+  margin-bottom: .2rem;
+}
+
+.playerCard .timer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.playerCard .timer-section p {
+  margin: 0;
+  font-size: 2.0rem;
+  color: #d4af7f;
+  font-family: 'Lilita One', cursive;
+}
+
+.playerCard .card-buttons {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.7rem;
+}
+
+.playerCard .card-buttons button {
+  flex: 1 1 40%;
+  min-width: 0;
+  font-size: 1rem;
+  padding: 0.7rem 0.2rem;
+}
+
+.no-cards-verbiage {
+  color: #bbb;
+  text-align: center;
+  display: block;
+  font-size: 0.98rem;
+  margin: 0.3rem 0 0.3rem 0;
+}
+
+@media (max-width: 400px) {
+  #playerCarousel {
+    height: 260px;
+  }
+  .playerCard {
+    max-width: 95vw;
+    min-width: 0;
+    padding: 0.7rem 0.3rem 0.7rem 0.3rem;
+    min-height: 150px;
+  }
+  .playerCard .player-name { font-size: 1.07rem; }
+  .playerCard .timer-section p { font-size: 1.35rem; }
+}
+
+@media (min-width: 700px) {
+  #playerCarousel {
+    height: 480px;
+  }
+  .playerCard {
+    max-width: 360px;
+    min-width: 220px;
+    min-height: 320px;
+    padding: 1.7rem 1.2rem 1.2rem 1.2rem;
   }
 }
 
-@keyframes flicker {
-  0% { filter: brightness(1.1); }
-  20% { filter: brightness(1.35); }
-  40% { filter: brightness(0.95); }
-  60% { filter: brightness(1.2); }
-  80% { filter: brightness(1.15); }
-  100% { filter: brightness(1.3); }
-}
-
-.flicker-start {
-  animation: flicker 1.5s infinite alternate;
-}
+/* --- Additional styles for the rest of your UI --- */
 
 .calculatorBox {
   background: #191919;
@@ -59,7 +214,7 @@ body {
   box-shadow: 0 4px 28px #0002;
   margin: 2rem auto 2rem auto;
   width: 100%;
-  max-width: 440px;
+  max-width: 540px;
   padding: 2rem 2rem 1rem 2rem;
   display: flex;
   flex-direction: column;
@@ -145,8 +300,7 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin: 0 auto 1rem auto;
   font-size: 1.25rem;
   width: 100%;
-  max-width: 440px;
-  /* Do NOT set display: none here! JS will control visibility */
+  max-width: 540px;
 }
 
 #playerTimer {
@@ -156,19 +310,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-top: 0.2rem;
 }
 
-#mainGameContainer {
-  min-height: 150px;
-}
-
-#siteFooter {
-  text-align: center;
-  font-size: 0.92rem;
-  color: #bbbbbb;
-  margin-top: 2.5rem;
-  margin-bottom: 1.2rem;
-}
-
-/* Endgame blocks */
 .playerEndgameBlock {
   background: #232323;
   border-radius: 7px;
@@ -184,7 +325,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-top: 0.7rem;
 }
 
-/* Popup buttons vertical stacking for clarity */
 .popupBox .styled-btn,
 .popupBox button {
   display: block;
@@ -199,14 +339,13 @@ input[type="number"]:focus, input[type="text"]:focus {
   width: 100%;
 }
 
-/* 📱 Smartphone Optimization */
 @media screen and (max-width: 600px) {
   body {
     padding: 1rem;
     box-sizing: border-box;
   }
 
-  #siteHeader, #siteFooter, .calculatorBox, .popupBox {
+  #siteHeader, #siteFooter, .calculatorBox, .popupBox, #playerCarouselWrap {
     width: 100%;
     max-width: 100%;
     padding: 1rem;
@@ -256,11 +395,24 @@ input[type="number"]:focus, input[type="text"]:focus {
   .popupBox input {
     width: 100%;
   }
+
+  #playerCarouselWrap {
+    padding: 0;
+  }
 }
 
-/* Player Name Styling */
 .player-name {
   font-family: 'Lilita One', cursive;
   color: #d4af7f !important;
   font-weight: normal !important;
+}
+
+#siteFooter {
+  text-align: center;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.98rem;
+  color: #bbb;
+  width: 100%;
+  display: block;
 }
