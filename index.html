@@ -2,26 +2,9 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Haggleoff TAX404</title>
+  <title>V1</title>
   <link rel="stylesheet" href="./style.css">
 
-</head>
-<body>
-<!-- partial:index.partial.html -->
-<html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>Haggleoff TAX404</title>
-  <link rel="stylesheet" href="./style.css">
-
-</head>
-<body>
-<!-- partial:index.partial.html -->
-<html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>Haggleoff TAX404</title>
-  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <!-- partial:index.partial.html -->
@@ -39,7 +22,7 @@
   <!-- 🛡️ Legal Disclaimer -->
   <div id="disclaimerOverlay" class="dimOverlay" style="display: flex;">
     <div class="popupBox">
-      <h2 style="font-family: 'Lilita One'; color: #d4af7f;">Legal Disclaimer</h2>
+      <h2 class="lilita" style="color: #d4af7f;">Legal Disclaimer</h2>
       <p style="text-align: left;">
         TAX404 is not a real tax software. It is a fictional component of Haggleoff’s card game experience.<br><br>
         Haggleoff LLC and TAX404 do not offer financial, accounting, legal, or tax advice through this platform. Use of this software should be considered purely satirical and recreational.<br><br>
@@ -54,7 +37,7 @@
     <a href="https://haggleoff.com" target="_blank">
       <img id="siteLogo" src="logo.png" alt="Haggleoff Logo" />
     </a>
-    <h1 id="taxLogoText" class="flicker-start" style="font-family: 'Lilita One'; color: #d4af7f;">TAX404</h1>
+    <h1 id="taxLogoText" class="lilita flicker-start" style="color: #d4af7f;">TAX404</h1>
     <p style="font-style: italic; font-family: 'Roboto'; color: #d9d9d9; margin-top: -0.5rem;">
       Mediocre tax software courtesy of Haggleoff
     </p>
@@ -63,10 +46,9 @@
   <!-- 🎲 Player Setup -->
   <div id="playerSetupBox" style="display: none;">
     <form id="playerForm" class="calculatorBox">
-      <h2 style="font-family: 'Lilita One'; color: #d4af7f;">Enter Player Names</h2>
+      <h2 class="lilita" style="color: #d4af7f;">Enter Player Names</h2>
       <div id="playerInputFields">
         <input type="text" name="playerName" placeholder="Player 1 (required)" required />
-        <!-- Player 2 will be added by default via script below -->
       </div>
       <button type="button" onclick="addPlayerField()">+ Add Player</button>
       <br><br>
@@ -83,16 +65,6 @@
       <div id="customPopupMessage"></div>
       <button id="customPopupYes">OK</button>
       <button id="customPopupNo">No</button>
-    </div>
-  </div>
-
-  <div id="customInputOverlay" class="dimOverlay">
-    <div class="popupBox">
-      <div id="customInputMessage"></div>
-      <input type="number" id="customInputField" min="0" step="1" />
-      <br><br>
-      <button id="customInputSubmit">Submit</button>
-      <button id="customInputCancel">Cancel</button>
     </div>
   </div>
 
@@ -147,16 +119,6 @@
       container.appendChild(input);
     }
   </script>
-</body>
-</html>
-<!-- partial -->
-  <script  src="./script.js"></script>
-
-</body>
-</html>
-<!-- partial -->
-  <script  src="./script.js"></script>
-
 </body>
 </html>
 <!-- partial -->

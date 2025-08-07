@@ -6,13 +6,44 @@ body {
   padding: 0;
 }
 
+/* Force Lilita One everywhere it's used to never be bold */
+.lilita, 
+[class*="lilita"], 
+[class*="Lilita"], 
+.player-card-name, 
+.final-result-name, 
+.player-name, 
+.final-results-winner, 
+.calculatorBox h2,
+.final-result-breaks,
+.player-card-breaks,
+#taxLogoText,
+.player-card-timer
+{
+  font-family: 'Lilita One', cursive !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  letter-spacing: normal;
+}
+
+.final-results-winner,
+.final-results-winner *,
+.player-card-timer,
+.player-card-name,
+.final-result-name,
+.player-name,
+.final-result-breaks,
+.player-card-breaks {
+  font-weight: normal !important;
+  font-style: normal !important;
+}
+
 #siteHeader {
   text-align: center;
   margin-top: 1.5rem;
   margin-bottom: 2rem;
 }
 
-/* Rectangular, retina-optimized logo for 320x160px */
 #siteLogo {
   width: 320px;
   height: 160px;
@@ -34,9 +65,6 @@ body {
     width: 320px;
     height: 160px;
     background-size: 320px 160px;
-    /* If you have a 2x logo, swap src via JS or use:
-       background-image: url('logo@2x.png');
-    */
   }
 }
 
@@ -68,7 +96,6 @@ body {
 }
 
 .calculatorBox h2 {
-  font-family: 'Lilita One', cursive;
   color: #d4af7f;
   margin-bottom: 0.5rem;
 }
@@ -100,6 +127,7 @@ input[type="number"]:focus, input[type="text"]:focus {
   cursor: pointer;
   margin: 0.2rem 0;
   transition: background 0.2s;
+  font-weight: normal !important;
 }
 
 .styled-btn:active,
@@ -140,22 +168,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin: 0.8rem 0.3rem 0 0.3rem;
 }
 
-#globalClockContainer {
-  text-align: center;
-  margin: 0 auto 1rem auto;
-  font-size: 1.25rem;
-  width: 100%;
-  max-width: 440px;
-  /* Do NOT set display: none here! JS will control visibility */
-}
-
-#playerTimer {
-  font-family: 'Lilita One', cursive;
-  font-size: 2.2rem;
-  color: #d4af7f;
-  margin-top: 0.2rem;
-}
-
 #mainGameContainer {
   min-height: 150px;
 }
@@ -168,7 +180,254 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-bottom: 1.2rem;
 }
 
-/* Endgame blocks */
+/* --- PLAYER CARD SECTION --- */
+.player-cards-scroll-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.2rem 0 2.6rem 0;
+  width: 100%;
+  padding-top: 1.1rem;
+  padding-bottom: 2.5rem;
+  overflow-y: visible !important;
+  position: relative;
+}
+
+.player-cards-row {
+  display: flex;
+  gap: 2.3rem;
+  overflow-x: auto;
+  overflow-y: visible !important;
+  align-items: stretch;
+  max-width: 85vw;
+  padding: 0.3rem 0.1rem;
+  scroll-behavior: smooth;
+  justify-content: center;
+  position: relative;
+}
+
+.player-card,
+.final-result-card,
+.endgame-card {
+  background: #313131;
+  border: 3px solid #d4af7f60;
+  border-radius: 16px;
+  /* SOFTER GLOW: lower blur, lower opacity */
+  box-shadow: 0 4px 16px #0002, 0 0 8px #d4af7f18;
+  min-width: 270px;
+  max-width: 320px;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 0.8rem;
+  margin: 0.7rem 0.6rem;
+  transition: border 0.25s, box-shadow 0.2s, transform 0.3s, background 0.25s;
+  position: relative;
+  user-select: none;
+  font-weight: normal !important;
+}
+
+.player-card.active {
+  background: #191919;
+  border: 3px solid #d4af7f;
+  /* SOFTER GLOW: lower blur, lower opacity */
+  box-shadow: 0 0 8px #d4af7f33, 0 4px 16px #0004;
+  z-index: 2;
+  transform: scale(1.06);
+}
+
+.player-card-inner,
+.final-result-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  font-weight: normal !important;
+}
+.player-card-name,
+.final-result-name {
+  font-size: 1.65rem;
+  color: #d4af7f;
+  margin-bottom: 0.55rem;
+  text-align: center;
+  font-weight: normal !important;
+}
+.player-card-timer {
+  font-family: 'Lilita One', cursive !important;
+  font-size: 2.3rem;
+  color: #f1f1f1 !important;
+  margin-bottom: 0.2rem;
+  font-weight: normal !important;
+}
+@media screen and (max-width: 900px) {
+  .player-card-timer {
+    font-size: 2rem;
+  }
+}
+.player-card-progress {
+  margin: 0.5rem 0 0.2rem 0;
+  width: 100%;
+}
+.player-card-breaks,
+.final-result-breaks {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #d4af7f;
+  font-weight: normal !important;
+}
+.player-card-breaks span,
+.final-result-breaks span {
+  color: #d4af7f;
+  font-weight: normal !important;
+}
+.player-card-breaks-num,
+.final-result-breaks-num {
+  color: #d4af7f;
+  font-size: 1.25rem;
+  font-weight: normal !important;
+}
+.player-card-actions {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.7rem;
+  width: 100%;
+  justify-content: center;
+}
+.player-card:not(.active) .player-card-actions {
+  display: none;
+}
+.card-btn {
+  font-family: 'Lilita One', cursive;
+  background: #d4af7f;
+  color: #232323;
+  border-radius: 7px;
+  border: none;
+  padding: 0.55rem 0.85rem;
+  font-size: 1.02rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #0002;
+  transition: background 0.19s;
+  font-weight: normal !important;
+}
+.card-btn:active {
+  background: #a68c5c;
+}
+.donate-btn { }
+.charity-btn { background: #947c52; color: #fff; }
+.charity-btn:active { background: #7a6135; }
+
+/* Endgame Taxes Button - Less Wide */
+#endgameTaxesBtn {
+  max-width: 180px;
+  width: 100%;
+  margin: 0 auto;
+  display: block;
+}
+
+.final-results-winner {
+  color: #d4af7f;
+  font-size: 1.02rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  font-weight: normal !important;
+  font-style: normal !important;
+  letter-spacing: normal;
+}
+.final-results-winner * {
+  font-weight: normal !important;
+  font-style: normal !important;
+}
+
+/* HORIZONTALLY SWIPEABLE CAROUSEL for both final results and endgame input */
+.final-results-cards-container,
+.endgame-cards-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1.2rem;
+  margin-top: 1.3rem;
+  margin-bottom: 1.3rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  white-space: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #d4af7f #232323;
+}
+.final-result-card, .endgame-card {
+  flex: 0 0 auto;
+  font-weight: normal !important;
+}
+
+/* Styling for the content inside the final result cards */
+.final-result-content {
+  width: 100%;
+  color: #f1f1f1;
+  font-size: 0.97rem;
+  text-align: center;
+  font-weight: normal !important;
+}
+.final-result-content strong,
+.final-result-content em,
+.final-result-content span {
+  color: inherit;
+  font-weight: normal !important;
+}
+
+/* Endgame card inputs styling */
+.endgame-card .sideInputs {
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 0.5rem;
+  width: 100%;
+  font-weight: normal !important;
+}
+.endgame-card input[type="number"] {
+  width: 90%;
+  max-width: 170px;
+  margin: 0 auto;
+  display: block;
+  text-align: center;
+  font-weight: normal !important;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 900px) {
+  .player-card, .player-card-inner,
+  .final-result-card, .final-result-card-inner,
+  .endgame-card {
+    min-width: 200px;
+    max-width: 98vw;
+    padding: 0.8rem 0.4rem;
+  }
+  .player-card-timer {
+    font-size: 2rem;
+  }
+  .player-cards-row {
+    gap: 1.1rem;
+    max-width: 98vw;
+  }
+  .player-cards-scroll-container {
+    margin: 1.7rem 0 1.7rem 0;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+  .final-results-cards-container,
+  .endgame-cards-container {
+    gap: 0.7rem;
+    margin-top: 0.7rem;
+    margin-bottom: 0.7rem;
+  }
+}
+
 .playerEndgameBlock {
   background: #232323;
   border-radius: 7px;
@@ -184,7 +443,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-top: 0.7rem;
 }
 
-/* Popup buttons vertical stacking for clarity */
 .popupBox .styled-btn,
 .popupBox button {
   display: block;
@@ -199,7 +457,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   width: 100%;
 }
 
-/* 📱 Smartphone Optimization */
 @media screen and (max-width: 600px) {
   body {
     padding: 1rem;
@@ -256,11 +513,21 @@ input[type="number"]:focus, input[type="text"]:focus {
   .popupBox input {
     width: 100%;
   }
+
+  .player-cards-scroll-container {
+    margin: 1.2rem 0 1.2rem 0;
+    padding-top: 1.3rem;
+    padding-bottom: 1.3rem;
+  }
+  .final-results-cards-container,
+  .endgame-cards-container {
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
 }
 
-/* Player Name Styling */
 .player-name {
-  font-family: 'Lilita One', cursive;
   color: #d4af7f !important;
   font-weight: normal !important;
 }

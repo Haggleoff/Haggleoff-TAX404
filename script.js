@@ -5,65 +5,6 @@ let timeLeft = 60;
 let timerRunningState = true;
 let disallowedNormalCards = [];
 
-function startTimer() {
-  if (timerInterval) return;
-  timerInterval = setInterval(() => {
-    if (timerRunningState && timeLeft > 0) {
-      timeLeft--;
-      updatePopupTimerDisplay();
-      if (timeLeft <= 0) {
-        timerRunningState = false;
-        updatePauseButtonState();
-      }
-    }
-  }, 1000);
-}
-
-function stopTimer() {
-  clearInterval(timerInterval);
-  timerInterval = null;
-}
-
-function updatePopupTimerDisplay() {
-  const timerDivs = document.querySelectorAll("#playerTimer");
-  timerDivs.forEach(div => div.innerText = timeLeft);
-}
-
-function updatePauseButtonState() {
-  const pauseBtn = document.getElementById("pauseResumeBtn");
-  if (!pauseBtn) return;
-  if (timeLeft <= 0) {
-    pauseBtn.innerText = "Restart";
-    pauseBtn.style.backgroundColor = "";
-  } else if (timerRunningState) {
-    pauseBtn.innerText = "Pause";
-    pauseBtn.style.backgroundColor = "#947c52";
-  } else {
-    pauseBtn.innerText = "Resume";
-    pauseBtn.style.backgroundColor = "";
-  }
-}
-
-function attachPauseButtonHandler() {
-  const pauseBtn = document.getElementById("pauseResumeBtn");
-  if (!pauseBtn) return;
-  pauseBtn.onclick = function () {
-    if (pauseBtn.innerText === "Pause") {
-      timerRunningState = false;
-      updatePauseButtonState();
-    } else if (pauseBtn.innerText === "Resume") {
-      timerRunningState = true;
-      updatePauseButtonState();
-    } else if (pauseBtn.innerText === "Restart") {
-      timeLeft = 60;
-      timerRunningState = true;
-      updatePopupTimerDisplay();
-      updatePauseButtonState();
-    }
-  };
-}
-
-// --- PLAYER ENTRY & SETUP ---
 document.getElementById("playerForm").addEventListener("submit", function(e) {
   e.preventDefault();
   const entered = [...this.querySelectorAll("input[name='playerName']")].filter(input => input.value.trim());
@@ -87,236 +28,175 @@ document.getElementById("playerForm").addEventListener("submit", function(e) {
   setupMsg += `<span style="font-family: 'Roboto', sans-serif; color: #f1f1f1;">
       After each player receives 1 free starting property during Setup,
     </span><br>
-    <span style="font-family: 'Lilita One', cursive; color: #d4af7f;">
-      Property Stack size: ${n + 1}
-    </span>`;
+    <span class="player-name" style="color: #d4af7f;">Property Stack size: ${n + 1}</span>`;
   customPopup(setupMsg, function() {
-    showStartOptions();
+    showPlayerCards();
   }, true, "Yes", "No", true);
 });
 
-let cachedDropdownHTML = "";
-
-function showStartOptions() {
-  cachedDropdownHTML = buildPlayerDropdownHTML();
-  document.getElementById("mainGameContainer").innerHTML = `
-    <div class="calculatorBox">
-      <h2>Choose Starting Player</h2>
-      <button onclick="manualStarter()">Select Starting Player</button>
-      <button onclick="randomStarter()">Random Player</button>
-    </div>
-  `;
-}
-
-function buildPlayerDropdownHTML() {
-  return `<select id="playerSelector" onchange="handlePlayerSwitch(this)">
-    ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
-  </select>`;
-}
-
-function manualStarter() {
-  const html = cachedDropdownHTML + `<br><br><button onclick="confirmManualStarter()">Confirm</button>`;
-  customHTMLPopup("Select starting player:", html, () => {});
-}
-
-function confirmManualStarter() {
-  const select = document.getElementById("playerSelector");
-  currentPlayerIndex = Number(select.value);
-  document.getElementById("customPopupOverlay").style.display = "none";
-  timeLeft = 60;
-  timerRunningState = true;
-  initializeTurn();
-}
-
-function handlePlayerSwitch(el) {
-  const selectedIndex = Number(el.value);
-  if (selectedIndex === currentPlayerIndex) return;
-  customPopup(
-    `End <span class="player-name">${players[currentPlayerIndex].name}</span>'s turn and switch to <span class="player-name">${players[selectedIndex].name}</span>?`,
-    function(confirm) {
-      if (confirm) {
-        stopTimer();
-        timeLeft = 60;
-        currentPlayerIndex = selectedIndex;
-        timerRunningState = true;
-        initializeTurn();
-      } else {
-        el.value = currentPlayerIndex;
-      }
-    },
-    true
-  );
-}
-
-function randomStarter() {
-  document.getElementById("mainGameContainer").innerHTML = `
-    <div class="calculatorBox">
-      <h2>🔒 Appointing Board Chair...</h2>
-      <p><em>Preparing randomized selection. Cue suspense...</em></p>
-    </div>
-  `;
-  setTimeout(() => {
-    currentPlayerIndex = Math.floor(Math.random() * players.length);
-    const name = players[currentPlayerIndex].name;
-    document.getElementById("mainGameContainer").innerHTML = `
-      <div class="calculatorBox">
-        <h2>🎉 Starting Player is...</h2>
-        <h1><span class="player-name">${name}</span></h1>
-        <button onclick="initializeTurn()">START</button>
+function showPlayerCards() {
+  let cards = '';
+  for (let i = 0; i < players.length; i++) {
+    const player = players[i];
+    cards += `
+      <div class="player-card${i === currentPlayerIndex ? ' active' : ''}" data-index="${i}">
+        <div class="player-card-inner">
+          <div class="player-card-name">${player.name}</div>
+          <div class="player-card-timer" id="playerTimer">${i === currentPlayerIndex ? timeLeft : ""}</div>
+          <div class="player-card-progress">${renderCardProgress(player.progress)}</div>
+          <div class="player-card-breaks">
+            <span>Tax Breaks Earned:</span>
+            <span class="player-card-breaks-num">${player.streaks + player.powerCards}</span>
+          </div>
+          <div class="player-card-actions">
+            <button class="card-btn donate-btn" onclick="donateAction(${i})">Donated</button>
+            <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Received</button>
+          </div>
+        </div>
       </div>
     `;
-    timeLeft = 60;
-    timerRunningState = true;
-  }, 3000);
-}
-
-function initializeTurn() {
-  showDonateOrCharityPopup();
-}
-
-function pickPlayerPopup() {
-  const dropdownHtml = `<select id="turnPlayerSelector">
-    ${players.map((p, i) => `<option value="${i}" ${i === currentPlayerIndex ? "selected" : ""}>${p.name}</option>`).join("")}
-  </select>`;
-  const html = `
-    ${dropdownHtml}
-    <br><br>
-    <button id="confirmPickPlayer" class="styled-btn">Confirm</button>
-  `;
-  customHTMLPopup(
-    `<div style="text-align:center; font-family:'Lilita One'; font-size:1.5rem; margin-bottom:1rem;">
-      <span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn
+  }
+  // Removed arrow buttons on both sides
+  document.getElementById("mainGameContainer").innerHTML = `
+    <div class="player-cards-scroll-container">
+      <div class="player-cards-row" id="playerCardsRow">${cards}</div>
     </div>
-    Pick a player to take their turn:`,
-    html,
-    () => {
-      const confirmBtn = document.getElementById("confirmPickPlayer");
-      const selector = document.getElementById("turnPlayerSelector");
-      if (confirmBtn && selector) {
-        confirmBtn.onclick = () => {
-          if (Number(selector.value) !== currentPlayerIndex) {
-            stopTimer();
-            currentPlayerIndex = Number(selector.value);
-            timeLeft = 60;
-            timerRunningState = true;
-          }
-          document.getElementById("customPopupOverlay").style.display = "none";
-          initializeTurn();
-        };
-      }
-      const closeBtn = document.getElementById("customCloseBtn");
-      if (closeBtn) {
-        closeBtn.onclick = () => {
-          document.getElementById("customPopupOverlay").style.display = "none";
-          showDonateOrCharityPopup();
-        };
-      }
-    }
-  );
-}
-
-function showDonateOrCharityPopup() {
+    <div style="text-align:center; margin: 2rem auto 0 auto;">
+      <button id="endgameTaxesBtn" class="styled-btn" onclick="showEndgame()">Endgame Taxes</button>
+    </div>
+  `;
+  scrollToActiveCard();
+  setupScrollToSetActivePlayer();
+  if (timerInterval) clearInterval(timerInterval);
+  timeLeft = 60;
   timerRunningState = true;
   startTimer();
+  updatePopupTimerDisplay();
+}
 
-  const player = players[currentPlayerIndex];
-  const popupTitleHTML = `
-    <div style="text-align:center; font-family:'Lilita One'; font-size:1.5rem; margin-bottom:1rem;">
-      <span class="player-name">${player.name}</span>'s Turn
-    </div>
-  `;
-  const titleRowHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.5rem;">
-      <button id="popupPickPlayerBtn" class="styled-btn" style="margin-left:0.25rem;">Pick Player</button>
-      <span id="popupDropdownContainer" style="display:none; margin-left:0.5rem;"></span>
-    </div>
-  `;
-  const timerHTML = `
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 1rem 0 1rem 0;">
-      <p id="playerTimer" style="margin-bottom: 0.25rem; font-family:'Lilita One'; font-size:2.2rem; color:#d4af7f;">${timeLeft}</p>
-      <div style="display:flex; gap:0.5rem;">
-        <button id="pauseResumeBtn" class="styled-btn">Pause</button>
-      </div>
-    </div>
-  `;
-  const streakProgressHTML = `
-    <div style="margin-bottom:1rem;">
-      <strong>Current Streak Progress:</strong>
-      ${renderCardProgress(player.progress) || "<span style='color:#bbb;'>No cards in streak.</span>"}
-      <br>
-      <span style="font-family:'Lilita One'; color: #d4af7f;">
-        Tax Breaks Earned: ${player.streaks + player.powerCards}
-      </span>
-    </div>
-  `;
-  const popupContent = `
-    ${popupTitleHTML}
-    ${titleRowHTML}
-    ${timerHTML}
-    Did <span class="player-name">${player.name}</span> <strong>Donate</strong> or <strong>Take Charity</strong>?<br><br>
-    ${streakProgressHTML}
-    <div id="endgameBtnContainer"></div>
-  `;
-  customPopup(
-    popupContent,
-    function(choice) {
-      if (choice === true) {
-        loadCalculator();
-      } else {
-        if (players[currentPlayerIndex].progress > 0) {
-          disallowedNormalCards[currentPlayerIndex] += players[currentPlayerIndex].progress;
-        }
-        players[currentPlayerIndex].progress = 0;
-        showDonateOrCharityPopup();
-      }
-    },
-    true,
-    "Donate",
-    "Took Charity"
-  );
+// --- IMPROVED SCROLL/SWIPE HANDLING WITH TIMER RESET ---
+function setupScrollToSetActivePlayer() {
   setTimeout(() => {
-    updatePopupTimerDisplay();
-    updatePauseButtonState();
-    attachPauseButtonHandler();
+    const row = document.getElementById("playerCardsRow");
+    if (!row) return;
+    let scrollTimeout = null;
+    row.onscroll = function() {
+      let cards = Array.from(row.querySelectorAll('.player-card'));
+      let rowRect = row.getBoundingClientRect();
+      let center = rowRect.left + rowRect.width / 2;
+      let minDist = Infinity, minIndex = 0;
+      cards.forEach((card, i) => {
+        let cardRect = card.getBoundingClientRect();
+        let cardCenter = cardRect.left + cardRect.width / 2;
+        let dist = Math.abs(center - cardCenter);
+        if (dist < minDist) {
+          minDist = dist;
+          minIndex = i;
+        }
+      });
+      // Only update active class, don't re-render the full cards!
+      if (minIndex !== currentPlayerIndex) {
+        currentPlayerIndex = minIndex;
+        // Reset the timer when player changes via swipe/scroll
+        if (timerInterval) clearInterval(timerInterval);
+        timeLeft = 60;
+        timerRunningState = true;
+        startTimer();
+        cards.forEach((c, idx) => c.classList.toggle('active', idx === minIndex));
+        updatePopupTimerDisplay();
+      }
+      // Optionally, snap to the nearest card after user stops scrolling for a bit:
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const activeCard = cards[currentPlayerIndex];
+        if (activeCard && row) {
+          const rowRect = row.getBoundingClientRect();
+          const activeRect = activeCard.getBoundingClientRect();
+          const scrollLeft = row.scrollLeft +
+            (activeRect.left + activeRect.width / 2) -
+            (rowRect.left + rowRect.width / 2);
+          row.scrollTo({ left: scrollLeft, behavior: "smooth" });
+        }
+      }, 200);
+    };
+  }, 0);
+}
+// --- END IMPROVED SCROLL/SWIPE HANDLING WITH TIMER RESET ---
 
-    const pickBtn = document.getElementById("popupPickPlayerBtn");
-    if (pickBtn) {
-      pickBtn.onclick = function() {
-        pickPlayerPopup();
-      };
+function scrollToActiveCard() {
+  setTimeout(() => {
+    const row = document.getElementById("playerCardsRow");
+    const active = row.querySelector(".player-card.active");
+    if (active && row) {
+      const rowRect = row.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      const scrollLeft = row.scrollLeft +
+        (activeRect.left + activeRect.width / 2) -
+        (rowRect.left + rowRect.width / 2);
+      row.scrollTo({
+        left: scrollLeft,
+        behavior: "smooth"
+      });
     }
+  }, 0);
+}
 
-    const yesBtn = document.getElementById("customPopupYes");
-    const noBtn = document.getElementById("customPopupNo");
-    const overlay = document.getElementById("customPopupOverlay");
-    if (yesBtn && noBtn && overlay) {
-      const oldEndgame = document.getElementById("endgameFromTurn");
-      if (oldEndgame) oldEndgame.remove();
-      const endgameBtn = document.createElement("button");
-      endgameBtn.type = "button";
-      endgameBtn.id = "endgameFromTurn";
-      endgameBtn.className = "styled-btn popup-action-btn";
-      endgameBtn.innerText = "Endgame Taxes";
-      endgameBtn.style.backgroundColor = "#947c52";
-      endgameBtn.onclick = function() {
-        overlay.style.display = "none";
-        showEndgame();
-      };
-      noBtn.parentNode.insertBefore(endgameBtn, noBtn.nextSibling);
+// prevPlayer and nextPlayer remain for legacy code, but are unused now
+function prevPlayer() {
+  currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
+  showPlayerCards();
+}
+
+function nextPlayer() {
+  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  showPlayerCards();
+}
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (timerRunningState && timeLeft > 0) {
+      timeLeft--;
+      updatePopupTimerDisplay();
+      if (timeLeft <= 0) {
+        timerRunningState = false;
+      }
     }
-  }, 50);
+  }, 1000);
+}
+
+function updatePopupTimerDisplay() {
+  const timerDivs = document.querySelectorAll("#playerTimer");
+  timerDivs.forEach((div, i) => {
+    if (i === currentPlayerIndex) div.innerText = timeLeft;
+    else div.innerText = "";
+  });
+}
+
+function donateAction(playerIndex) {
+  if (playerIndex !== currentPlayerIndex) return;
+  loadCalculator();
+}
+
+function tookCharityAction(playerIndex) {
+  if (playerIndex !== currentPlayerIndex) return;
+  if (players[currentPlayerIndex].progress > 0) {
+    disallowedNormalCards[currentPlayerIndex] += players[currentPlayerIndex].progress;
+  }
+  players[currentPlayerIndex].progress = 0;
+  nextPlayer();
 }
 
 function loadCalculator() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
-      <h2><span class="player-name">${players[currentPlayerIndex].name}</span>'s Turn</h2>
+      <h2 class="player-name">${players[currentPlayerIndex].name}'s Turn</h2>
       <div id="tallyProgress">${renderCardProgress(players[currentPlayerIndex].progress)}</div>
       <label>Normal Cards Donated (this round):</label>
       <input type="number" id="normal" min="0" step="1"><br>
       <label>Power Cards or Cash Donated (this round):</label>
       <input type="number" id="power" min="0" step="1"><br>
-      <p style="font-family:'Lilita One'; color:#d4af7f;">Tax Breaks Earned: ${players[currentPlayerIndex].streaks + players[currentPlayerIndex].powerCards}</p>
+      <p class="player-card-breaks">Tax Breaks Earned: ${players[currentPlayerIndex].streaks + players[currentPlayerIndex].powerCards}</p>
       <button onclick="confirmTurn()">Confirm</button>
     </div>
   `;
@@ -348,7 +228,7 @@ function confirmTurn() {
   p.streaks += completedStreaks;
   p.progress = p.progress % 5;
   p.powerCards += powerNum;
-  showDonateOrCharityPopup();
+  nextPlayer();
 }
 
 function showEndgame() {
@@ -356,29 +236,33 @@ function showEndgame() {
     if (confirm) {
       loadEndgame();
     } else {
-      showDonateOrCharityPopup();
+      showPlayerCards();
     }
   });
 }
 
 function loadEndgame() {
-  stopTimer();
+  if (timerInterval) clearInterval(timerInterval);
   timerRunningState = false;
   let blocks = players.map((p, i) => `
-    <div class="playerEndgameBlock">
-      <h3><span class="player-name">${p.name}</span></h3>
-      <div class="sideInputs">
-        <input type="number" id="coins_${i}" min="0" step="1" placeholder="Haggleoffs">
-        <input type="number" id="props_${i}" min="1" step="1" placeholder="Properties">
+    <div class="endgame-card">
+      <div class="final-result-card-inner">
+        <div class="final-result-name player-name">${p.name}</div>
+        <div class="sideInputs">
+          <input type="number" id="coins_${i}" min="0" step="1" placeholder="Haggleoffs">
+          <input type="number" id="props_${i}" min="1" step="1" placeholder="Properties">
+        </div>
       </div>
     </div>
   `).join("");
 
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
-      <h2>Endgame</h2>
+      <h2 class="lilita" style="color: #d4af7f;">Endgame</h2>
       <p style="text-align:center;">Enter each player’s Haggleoffs and Properties.</p>
-      ${blocks}
+      <div class="endgame-cards-container">
+        ${blocks}
+      </div>
       <button onclick="calculateFinalTaxes()">Calculate Taxes</button>
       <div id="finalSummary" style="display:none;"></div>
     </div>
@@ -399,6 +283,7 @@ function calculateFinalTaxes() {
   summary.style.display = "none";
   summary.innerHTML = "";
 
+  // Validate input
   for (let i = 0; i < players.length; i++) {
     const coinsVal = document.getElementById(`coins_${i}`).value.trim();
     const propsVal = document.getElementById(`props_${i}`).value.trim();
@@ -408,9 +293,27 @@ function calculateFinalTaxes() {
     }
   }
 
-  summary.style.display = "block";
-  summary.innerHTML = "<h3>Final Results</h3>";
+  // Compute winner(s) first so we can show this above the cards
+  const netWorths = players.map(p => p.coins - p.tax);
+  const maxCoins = Math.max(...netWorths);
+  const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
 
+  let winnerHtml = "";
+  if (contenders.length === 1) {
+    winnerHtml = `<div class="final-results-winner"><span class="player-name">${contenders[0].name}</span> wins with ${maxCoins} Haggleoffs!</div>`;
+  } else {
+    const maxProps = Math.max(...contenders.map(p => p.properties));
+    const tied = contenders.filter(p => p.properties === maxProps);
+    if (tied.length === 1) {
+      winnerHtml = `<div class="final-results-winner"><span class="player-name">${tied[0].name}</span> wins by owning more properties!</div>`;
+    } else {
+      const names = tied.map(p => `<span class="player-name">${p.name}</span>`).join(", ");
+      winnerHtml = `<div class="final-results-winner"><span style="color:#d4af7f;">There are no winners—just shareholders.</span><br>Tied players: ${names}</div>`;
+    }
+  }
+
+  // Cards layout for final results
+  let cardsHtml = "";
   players.forEach((p, i) => {
     const coinsVal = document.getElementById(`coins_${i}`).value.trim();
     const propsVal = document.getElementById(`props_${i}`).value.trim();
@@ -451,25 +354,37 @@ function calculateFinalTaxes() {
     const afterRate = p.coins ? Math.round((p.tax / p.coins) * 100) : 0;
     const netIncome = p.coins - p.tax;
 
-    summary.innerHTML += `
-      <p>
-        <span class="player-name">${p.name}</span>
-        ${amtApplied ? `<span style="color:#dc143c; font-weight:bold;">AMT Triggered</span>` : ""}<br>
-        Coins: ${p.coins}, Properties: ${p.properties}<br>
-        <strong>Gross Tax: ${baseTax}</strong><br>
-        <span style="font-weight:bold; color:#d4af7f;">Effective Rate: ${beforeRate}% → ${afterRate}%</span><br>
-        Tax Avoided: ${avoided}<br>
-        ${amtApplied ? `<span style="font-weight:bold; color:#dc143c;">AMT: ${amtValue} (${amtPercentString})</span><br>` : ""}
-        <span style="font-weight:bold; color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
-        <span style="font-weight:bold; color:#d4af7f;">Net Income: ${netIncome}</span><br>
-        Audit Risk: ${getAuditRiskLevel(p)}<br>
-        <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins, p.properties)}</em><br>
-        <a href="#" onclick="showTaxBreakdown(${i}); return false;" style="color:#f1f1f1; text-decoration:underline; font-style:italic;">More Info</a>
-      </p>
+    cardsHtml += `
+      <div class="final-result-card">
+        <div class="final-result-card-inner">
+          <div class="final-result-name player-name">${p.name}</div>
+          <div class="final-result-content">
+            ${amtApplied ? `<span style="color:#dc143c;">AMT Triggered</span><br>` : ""}
+            Coins: <span>${p.coins}</span>, Properties: <span>${p.properties}</span><br>
+            Gross Tax: ${baseTax}<br>
+            <span style="color:#d4af7f;">Effective Rate: ${beforeRate}% → ${afterRate}%</span><br>
+            Tax Avoided: ${avoided}<br>
+            ${amtApplied ? `<span style="color:#dc143c;">AMT: ${amtValue} (${amtPercentString})</span><br>` : ""}
+            <span style="color:#d4af7f;">Tax Owed: ${p.tax}</span><br>
+            <span style="color:#d4af7f;">Net Income: ${netIncome}</span><br>
+            Audit Risk: ${getAuditRiskLevel(p)}<br>
+            <em style="color:#d4af7f;">${getTaxBracketMessage(p.coins, p.properties)}</em><br>
+            <a href="#" onclick="showTaxBreakdown(${i}); return false;" style="color:#f1f1f1; text-decoration:underline; font-style:italic;">More Info</a>
+          </div>
+        </div>
+      </div>
     `;
   });
 
-  determineWinner();
+  summary.style.display = "block";
+  summary.innerHTML = `
+    <h3 style="margin-bottom:0.6rem;">Final Results</h3>
+    ${winnerHtml}
+    <div class="final-results-cards-container">
+      ${cardsHtml}
+    </div>
+    <button onclick="exitToSetup()" class="styled-btn" style="max-width:180px; margin:1.1rem auto 0 auto; display:block;">EXIT</button>
+  `;
 }
 
 function showTaxBreakdown(playerIndex) {
@@ -512,10 +427,10 @@ function showTaxBreakdown(playerIndex) {
   let streaksEarned = p.streaks;
   let donationsDetails = `
     <ul style="text-align:left;">
-      <li>Normal Cards Donated: <strong>${p.streaks * 5 + p.progress}</strong></li>
-      <li>Streaks Earned: <strong>${streaksEarned}</strong></li>
-      <li>Power Cards or Cash Donated: <strong>${p.powerCards}</strong></li>
-      <li><span style="color:#d4af7f;">Total Tax Breaks Earned:</span> <strong style="color:#d4af7f;">${breaks}</strong></li>
+      <li>Normal Cards Donated: ${p.streaks * 5 + p.progress}</li>
+      <li>Streaks Earned: ${streaksEarned}</li>
+      <li>Power Cards or Cash Donated: ${p.powerCards}</li>
+      <li><span style="color:#d4af7f;">Total Tax Breaks Earned:</span> <span style="color:#d4af7f;">${breaks}</span></li>
     </ul>
   `;
 
@@ -548,7 +463,7 @@ function showTaxBreakdown(playerIndex) {
   `;
 
   customHTMLPopup(
-    `<h2 style="font-family:'Lilita One'; color:#d4af7f;">Tax Overview Statement</h2>`,
+    `<h2 class="lilita" style="color:#d4af7f; font-weight:normal;">Tax Overview Statement</h2>`,
     breakdownHTML,
     () => {
       const closeBtn = document.getElementById("customCloseBtn");
@@ -573,34 +488,10 @@ function getAuditRiskLevel(player) {
   return "Low";
 }
 
-function determineWinner() {
-  const netWorths = players.map(p => p.coins - p.tax);
-  const maxCoins = Math.max(...netWorths);
-  const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
-  const summary = document.getElementById("finalSummary");
-
-  if (contenders.length === 1) {
-    summary.innerHTML += `<p><strong><span class="player-name">${contenders[0].name}</span> wins with ${maxCoins} Haggleoffs!</strong></p>`;
-  } else {
-    const maxProps = Math.max(...contenders.map(p => p.properties));
-    const tied = contenders.filter(p => p.properties === maxProps);
-    if (tied.length === 1) {
-      summary.innerHTML += `<p><strong><span class="player-name">${tied[0].name}</span> wins by owning more properties!</strong></p>`;
-    } else {
-      const names = tied.map(p => `<span class="player-name">${p.name}</span>`).join(", ");
-      summary.innerHTML += `<p><strong><span style="color:#d4af7f;">There are no winners—just shareholders.</span></strong><br>Tied players: ${names}</p>`;
-    }
-  }
-
-  summary.innerHTML += `
-    <button onclick="exitToSetup()">EXIT</button>
-  `;
-}
-
 function exitToSetup() {
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="calculatorBox">
-      <h2>Thank you for Haggleoffing...</h2>
+      <h2 class="lilita" style="color:#d4af7f;">Thank you for Haggleoffing...</h2>
       <button onclick="backToNameInput()">Enter New Players</button>
     </div>
   `;
@@ -612,7 +503,7 @@ function backToNameInput() {
   players = [];
   disallowedNormalCards = [];
   currentPlayerIndex = 0;
-  stopTimer();
+  if (timerInterval) clearInterval(timerInterval);
   timerRunningState = true;
   timeLeft = 60;
 }
@@ -628,7 +519,6 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
   } else {
     msg.innerHTML = message.replace(/\n/g, "<br>");
   }
-  // Make the popup scrollable on overflow for mobile/small screens
   msg.style.maxHeight = "75vh";
   msg.style.overflowY = "auto";
 
@@ -639,8 +529,6 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
     yesBtn.style.display = "inline-block";
     noBtn.style.display = "none";
     yesBtn.onclick = () => overlay.style.display = "none";
-    const oldEndgame = document.getElementById("endgameFromTurn");
-    if (oldEndgame) oldEndgame.remove();
   } else if (okOnly) {
     yesBtn.innerText = "OK";
     yesBtn.style.display = "inline-block";
@@ -662,8 +550,6 @@ function customPopup(message, callback, isHtml = false, yesText = "Yes", noText 
       overlay.style.display = "none";
       callback(false);
     };
-    const oldEndgame = document.getElementById("endgameFromTurn");
-    if (oldEndgame) oldEndgame.remove();
   }
 }
 
@@ -674,7 +560,6 @@ function customHTMLPopup(message, html, callback) {
   const noBtn = document.getElementById("customPopupNo");
 
   msg.innerHTML = `${message}<br><br>${html}<br><br><button id="customCloseBtn">Close</button>`;
-  // Make the popup scrollable on overflow for mobile/small screens
   msg.style.maxHeight = "75vh";
   msg.style.overflowY = "auto";
 
@@ -690,14 +575,12 @@ function renderCardProgress(progress) {
   let blocks = "";
   for (let i = 0; i < progress; i++) {
     blocks += `<div style="
-      width: 24px;
-      height: 36px;
+      width: 20px;
+      height: 30px;
       background-color: #d4af7f;
-      margin: 0 3px;
-      border-radius: 6px;">
+      margin: 0 2px;
+      border-radius: 5px;">
     </div>`;
   }
-  return `<div style="display: flex; justify-content: center; margin-top: 1rem;">${blocks}</div>`;
+  return `<div style="display: flex; justify-content: center; margin-top: 0.5rem;">${blocks}</div>`;
 }
-
-startTimer();
