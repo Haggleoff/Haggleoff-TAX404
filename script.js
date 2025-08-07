@@ -56,7 +56,6 @@ function showPlayerCards() {
       </div>
     `;
   }
-  // Removed arrow buttons on both sides
   document.getElementById("mainGameContainer").innerHTML = `
     <div class="player-cards-scroll-container">
       <div class="player-cards-row" id="playerCardsRow">${cards}</div>
@@ -74,7 +73,6 @@ function showPlayerCards() {
   updatePopupTimerDisplay();
 }
 
-// --- IMPROVED SCROLL/SWIPE HANDLING WITH TIMER RESET ---
 function setupScrollToSetActivePlayer() {
   setTimeout(() => {
     const row = document.getElementById("playerCardsRow");
@@ -94,10 +92,8 @@ function setupScrollToSetActivePlayer() {
           minIndex = i;
         }
       });
-      // Only update active class, don't re-render the full cards!
       if (minIndex !== currentPlayerIndex) {
         currentPlayerIndex = minIndex;
-        // Reset the timer when player changes via swipe/scroll
         if (timerInterval) clearInterval(timerInterval);
         timeLeft = 60;
         timerRunningState = true;
@@ -105,7 +101,6 @@ function setupScrollToSetActivePlayer() {
         cards.forEach((c, idx) => c.classList.toggle('active', idx === minIndex));
         updatePopupTimerDisplay();
       }
-      // Optionally, snap to the nearest card after user stops scrolling for a bit:
       if (scrollTimeout) clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         const activeCard = cards[currentPlayerIndex];
@@ -121,7 +116,6 @@ function setupScrollToSetActivePlayer() {
     };
   }, 0);
 }
-// --- END IMPROVED SCROLL/SWIPE HANDLING WITH TIMER RESET ---
 
 function scrollToActiveCard() {
   setTimeout(() => {
@@ -141,7 +135,6 @@ function scrollToActiveCard() {
   }, 0);
 }
 
-// prevPlayer and nextPlayer remain for legacy code, but are unused now
 function prevPlayer() {
   currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
   showPlayerCards();
@@ -187,49 +180,106 @@ function tookCharityAction(playerIndex) {
   nextPlayer();
 }
 
+// --- DONATION CALCULATOR WITH PROGRESSION AND POWER CIRCLE ---
 function loadCalculator() {
-  document.getElementById("mainGameContainer").innerHTML = `
-    <div class="calculatorBox">
-      <h2 class="player-name">${players[currentPlayerIndex].name}'s Turn</h2>
-      <div id="tallyProgress">${renderCardProgress(players[currentPlayerIndex].progress)}</div>
-      <label>Normal Cards Donated (this round):</label>
-      <input type="number" id="normal" min="0" step="1"><br>
-      <label>Power Cards or Cash Donated (this round):</label>
-      <input type="number" id="power" min="0" step="1"><br>
-      <p class="player-card-breaks">Tax Breaks Earned: ${players[currentPlayerIndex].streaks + players[currentPlayerIndex].powerCards}</p>
-      <button onclick="confirmTurn()">Confirm</button>
-    </div>
-  `;
+  const player = players[currentPlayerIndex];
+  let normalDonated = 0;
+  let powerDonated = 0;
+  let tempProgress = player.progress;
+  let tempStreaks = player.streaks;
+
+  function updateDisplay() {
+    // Visual progression streak (0-5 per streak)
+    let blocks = "";
+    let donatedTotal = tempProgress + normalDonated;
+    let filled = donatedTotal % 5;
+    // Show 5 filled blocks if exactly on a new streak
+    let showFilled = (filled === 0 && donatedTotal > 0) ? 5 : filled;
+    for (let i = 0; i < 5; i++) {
+      if (i < showFilled) {
+        blocks += `<div class="donate-block"></div>`;
+      } else {
+        blocks += `<div class="donate-block donate-block-empty"></div>`;
+      }
+    }
+
+    let streaksThisTurn = Math.floor(donatedTotal / 5);
+    let totalStreaksThisTurn = streaksThisTurn;
+    let taxBreaksPreview = player.streaks + player.powerCards + powerDonated + totalStreaksThisTurn;
+
+    document.getElementById("mainGameContainer").innerHTML = `
+      <div class="calculatorBox" style="text-align:center;">
+        <h2 class="player-name">${player.name}'s Turn</h2>
+        <label>Normal Cards Donated</label>
+        <div class="donate-row">
+          <button class="donate-btn-shape" id="minusNormal" ${normalDonated === 0 ? 'disabled' : ''}>-</button>
+          <div class="donate-blocks-container">${blocks}</div>
+          <button class="donate-btn-shape" id="plusNormal" ${(normalDonated + tempProgress >= 20) ? 'disabled' : ''}>+</button>
+        </div>
+        <span class="streak-helper">Each streak (5 cards) is a Tax Break Earned</span>
+        <label class="power-label">Power Cards or Cash Donated</label>
+        <div class="donate-row">
+          <button class="donate-btn-shape" id="minusPower" ${powerDonated === 0 ? 'disabled' : ''}>-</button>
+          <div class="power-circle-container">
+            <div class="power-circle${powerDonated === 0 ? " zero" : ""}">${powerDonated}</div>
+          </div>
+          <button class="donate-btn-shape" id="plusPower" ${powerDonated >= 20 ? 'disabled' : ''}>+</button>
+        </div>
+        <p class="player-card-breaks" style="text-align:center;">Tax Breaks Earned: <span id="taxBreaksPreview">${taxBreaksPreview}</span></p>
+        <button onclick="confirmTurnWithBlocks(${normalDonated},${powerDonated})" id="confirmDonationBtn">Confirm</button>
+      </div>
+    `;
+
+    document.getElementById("plusNormal").onclick = function() {
+      if (normalDonated + tempProgress < 20) {
+        normalDonated++;
+        updateDisplay();
+      }
+    };
+    document.getElementById("minusNormal").onclick = function() {
+      if (normalDonated > 0) {
+        normalDonated--;
+        updateDisplay();
+      }
+    };
+    document.getElementById("plusPower").onclick = function() {
+      if (powerDonated < 20) {
+        powerDonated++;
+        updateDisplay();
+      }
+    };
+    document.getElementById("minusPower").onclick = function() {
+      if (powerDonated > 0) {
+        powerDonated--;
+        updateDisplay();
+      }
+    };
+    document.getElementById("confirmDonationBtn").onclick = function() {
+      confirmTurnWithBlocks(normalDonated, powerDonated);
+    };
+  }
+  updateDisplay();
 }
 
-function confirmTurn() {
-  const normalVal = document.getElementById("normal").value.trim();
-  const powerVal = document.getElementById("power").value.trim();
-  if (normalVal === "" && powerVal === "") {
+function confirmTurnWithBlocks(normalDonated, powerDonated) {
+  if (normalDonated === 0 && powerDonated === 0) {
     customPopup("Please enter your donations for at least one field.");
     return;
   }
-  if (
-    (normalVal !== "" && !/^\d+$/.test(normalVal)) ||
-    (powerVal !== "" && !/^\d+$/.test(powerVal))
-  ) {
-    customPopup("Please enter whole numbers only (no decimals or negative numbers) for both Normal Cards Donated and Power Cards or Cash Donated.");
-    return;
-  }
-  const normalNum = normalVal === "" ? 0 : Number(normalVal);
-  const powerNum = powerVal === "" ? 0 : Number(powerVal);
-  if (normalNum < 0 || powerNum < 0) {
+  if (normalDonated < 0 || powerDonated < 0) {
     customPopup("Please enter non-negative whole numbers for both Normal Cards Donated and Power Cards or Cash Donated.");
     return;
   }
   const p = players[currentPlayerIndex];
-  p.progress += normalNum;
-  const completedStreaks = Math.floor(p.progress / 5);
+  let totalProgress = p.progress + normalDonated;
+  let completedStreaks = Math.floor(totalProgress / 5);
   p.streaks += completedStreaks;
-  p.progress = p.progress % 5;
-  p.powerCards += powerNum;
+  p.progress = totalProgress % 5;
+  p.powerCards += powerDonated;
   nextPlayer();
 }
+
+// --- END DONATION CALCULATOR ---
 
 function showEndgame() {
   customPopup("Is the game over? Ready for final taxes?", function(confirm) {
@@ -283,7 +333,6 @@ function calculateFinalTaxes() {
   summary.style.display = "none";
   summary.innerHTML = "";
 
-  // Validate input
   for (let i = 0; i < players.length; i++) {
     const coinsVal = document.getElementById(`coins_${i}`).value.trim();
     const propsVal = document.getElementById(`props_${i}`).value.trim();
@@ -293,7 +342,6 @@ function calculateFinalTaxes() {
     }
   }
 
-  // Assign coins/properties and calculate taxes for each player before winner calculation
   for (let i = 0; i < players.length; i++) {
     const coinsVal = document.getElementById(`coins_${i}`).value.trim();
     const propsVal = document.getElementById(`props_${i}`).value.trim();
@@ -301,7 +349,6 @@ function calculateFinalTaxes() {
     players[i].coins = Number(coinsVal);
     players[i].properties = Math.max(1, Number(propsVal));
 
-    // Tax calculation logic (same as below)
     const p = players[i];
     const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
     const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
@@ -310,8 +357,6 @@ function calculateFinalTaxes() {
     let baseTax = grossTax < capTax ? grossTax : capTax;
     const postBreakTax = Math.max(0, baseTax - (p.streaks + p.powerCards));
     p.tax = Math.min(postBreakTax, p.coins);
-
-    // AMT logic
     if (p.tax === 0) {
       if (p.coins >= 34 && p.coins <= 39) {
         p.tax = Math.floor(p.coins * 0.03);
@@ -321,7 +366,6 @@ function calculateFinalTaxes() {
     }
   }
 
-  // Compute winner(s) after taxes are fully calculated and assigned
   const netWorths = players.map(p => p.coins - p.tax);
   const maxCoins = Math.max(...netWorths);
   const contenders = players.filter(p => (p.coins - p.tax) === maxCoins);
@@ -340,21 +384,15 @@ function calculateFinalTaxes() {
     }
   }
 
-  // Cards layout for final results
   let cardsHtml = "";
   players.forEach((p, i) => {
-    // Re-calculate all breakdowns to display (matches calculation above)
     const coinsVal = p.coins;
     const propsVal = p.properties;
-
     const bracketTax = coinsVal <= 6 ? 0 : coinsVal <= 14 ? 3 : coinsVal <= 24 ? 5 : coinsVal <= 39 ? 8 : 10;
     const propertyTax = coinsVal > 6 ? propsVal * (propsVal >= 4 ? 2 : 1) : 0;
-
     let grossTax = bracketTax + propertyTax;
     let capTax = Math.floor(coinsVal * 0.54);
-
     let baseTax = grossTax < capTax ? grossTax : capTax;
-
     const breaks = p.streaks + p.powerCards;
     const postBreakTax = Math.max(0, baseTax - breaks);
     let displayTax = Math.min(postBreakTax, coinsVal);
@@ -412,11 +450,25 @@ function calculateFinalTaxes() {
     </div>
     <button onclick="exitToSetup()" class="styled-btn" style="max-width:180px; margin:1.1rem auto 0 auto; display:block;">EXIT</button>
   `;
+
+  // --- Scroll to final results and confetti celebration ---
+  setTimeout(() => {
+    const summaryEl = document.getElementById("finalSummary");
+    if (summaryEl) summaryEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Fire confetti if available!
+    if (typeof confetti === "function") {
+      confetti({
+        particleCount: 120,
+        spread: 90,
+        origin: { y: 0.2 }
+      });
+    }
+  }, 80);
+  // --------------------------------------------------------
 }
 
 function showTaxBreakdown(playerIndex) {
   const p = players[playerIndex];
-
   const bracketTax = p.coins <= 6 ? 0 : p.coins <= 14 ? 3 : p.coins <= 24 ? 5 : p.coins <= 39 ? 8 : 10;
   const propertyTax = p.coins > 6 ? p.properties * (p.properties >= 4 ? 2 : 1) : 0;
   let grossTax = bracketTax + propertyTax;
@@ -489,6 +541,7 @@ function showTaxBreakdown(playerIndex) {
     </div>
   `;
 
+  // Reduce gap between title and player name: remove extra <br>
   customHTMLPopup(
     `<h2 class="lilita" style="color:#d4af7f; font-weight:normal;">Tax Overview Statement</h2>`,
     breakdownHTML,
@@ -508,7 +561,6 @@ function getAuditRiskLevel(player) {
   const breaks = player.streaks + player.powerCards;
   const income = player.coins || 1;
   const ratio = breaks / income;
-
   if (ratio >= 1) return "Board Review Pending";
   if (ratio >= 0.5) return "High";
   if (ratio >= 0.3) return "Moderate";
@@ -586,7 +638,8 @@ function customHTMLPopup(message, html, callback) {
   const yesBtn = document.getElementById("customPopupYes");
   const noBtn = document.getElementById("customPopupNo");
 
-  msg.innerHTML = `${message}<br><br>${html}<br><br><button id="customCloseBtn">Close</button>`;
+  // Only one <br> between title and html to minimize gap
+  msg.innerHTML = `${message}<br>${html}<br><br><button id="customCloseBtn">Close</button>`;
   msg.style.maxHeight = "75vh";
   msg.style.overflowY = "auto";
 
