@@ -258,6 +258,17 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin: 0.5rem 0 0.2rem 0;
   width: 100%;
 }
+
+/* Always reserve space for streak progress, even if empty */
+.player-card-progress-bar {
+  min-height: 30px;
+  height: 30px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .player-card-breaks,
 .final-result-breaks {
   margin: 0.5rem 0;

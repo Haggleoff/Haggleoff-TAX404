@@ -67,7 +67,7 @@ function showPlayerCards() {
             <span>Tax Breaks Earned:</span>
             <span class="player-card-breaks-num">${player.streaks + player.powerCards}</span>
           </div>
-          <div class="player-card-actions stacked-actions">
+          <div class="player-card-actions">
             <button class="card-btn donate-btn" onclick="donateAction(${i})">Donated to Charity</button>
             <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Took from Charity</button>
           </div>
@@ -91,6 +91,14 @@ function showPlayerCards() {
   timerRunningState = true;
   startTimer();
   updatePopupTimerDisplay();
+}
+
+function renderCardProgress(progress) {
+  // Always render the container for layout consistency
+  // 30px is the height of each block, adjust if you use a different value in CSS
+  return `<div class="player-card-progress-bar">
+    ${progress > 0 ? Array(progress).fill('<div style="width: 20px; height: 30px; background-color: #d4af7f; margin: 0 2px; border-radius: 5px;"></div>').join('') : ''}
+  </div>`;
 }
 
 function setupTimerClickHandler() {
@@ -696,19 +704,4 @@ function customHTMLPopup(message, html, callback) {
   noBtn.style.display = "none";
 
   if (typeof callback === "function") callback();
-}
-
-function renderCardProgress(progress) {
-  if (progress === 0) return "";
-  let blocks = "";
-  for (let i = 0; i < progress; i++) {
-    blocks += `<div style="
-      width: 20px;
-      height: 30px;
-      background-color: #d4af7f;
-      margin: 0 2px;
-      border-radius: 5px;">
-    </div>`;
-  }
-  return `<div style="display: flex; justify-content: center; margin-top: 0.5rem;">${blocks}</div>`;
 }
