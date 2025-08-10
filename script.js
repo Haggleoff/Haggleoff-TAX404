@@ -67,9 +67,9 @@ function showPlayerCards() {
             <span>Tax Breaks Earned:</span>
             <span class="player-card-breaks-num">${player.streaks + player.powerCards}</span>
           </div>
-          <div class="player-card-actions">
-            <button class="card-btn donate-btn" onclick="donateAction(${i})">Donated</button>
-            <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Received</button>
+          <div class="player-card-actions stacked-actions">
+            <button class="card-btn donate-btn" onclick="donateAction(${i})">Donated to Charity</button>
+            <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Took from Charity</button>
           </div>
         </div>
       </div>

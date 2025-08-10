@@ -38,17 +38,16 @@ body {
 #siteHeader {
   text-align: center;
   margin-top: 1.5rem;
-  margin-bottom: 0; /* Remove bottom margin to eliminate gap */
+  margin-bottom: 0;
   padding-bottom: 0;
 }
 #headerTagline {
   margin-top: -0.5rem !important;
-  margin-bottom: 0.2rem !important; /* Shrink bottom margin to tighten gap */
+  margin-bottom: 0.2rem !important;
   padding: 0 !important;
   font-style: italic;
   font-family: 'Roboto', sans-serif;
   color: #d9d9d9;
-  /* Optionally, font-size: inherit; */
 }
 #siteLogo {
   width: 320px;
@@ -180,9 +179,9 @@ input[type="number"]:focus, input[type="text"]:focus {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin: 0.2rem 0 0 0; /* Reduce top margin to minimize gap under header */
+  margin: 0.2rem 0 0 0;
   width: 100%;
-  padding-top: 0.1rem; /* Reduce padding above cards */
+  padding-top: 0.1rem;
   padding-bottom: 0;
   overflow-y: visible !important;
   position: relative;
@@ -282,10 +281,11 @@ input[type="number"]:focus, input[type="text"]:focus {
 .player-card-actions {
   margin-top: 0.7rem;
   display: flex;
-  flex-direction: row;
-  gap: 0.7rem;
+  flex-direction: column; /* Stack buttons vertically */
+  gap: 0.25rem; /* Reduced gap between buttons */
   width: 100%;
   justify-content: center;
+  align-items: center;
 }
 .player-card:not(.active) .player-card-actions {
   display: none;
@@ -302,6 +302,8 @@ input[type="number"]:focus, input[type="text"]:focus {
   box-shadow: 0 2px 8px #0002;
   transition: background 0.19s;
   font-weight: normal !important;
+  width: 90%;
+  max-width: 200px;
 }
 .card-btn:active {
   background: #a68c5c;
@@ -313,7 +315,7 @@ input[type="number"]:focus, input[type="text"]:focus {
 #endgameTaxesBtn {
   max-width: 180px;
   width: 100%;
-  margin: 0 auto 0.4rem auto; /* Reduce margin to close gap */
+  margin: 0 auto 0.4rem auto;
   display: block;
 }
 .final-results-winner {
@@ -350,7 +352,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   flex: 0 0 auto;
   font-weight: normal !important;
 }
-/* Styling for the content inside the final result cards */
 .final-result-content {
   width: 100%;
   color: #f1f1f1;
@@ -364,7 +365,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   color: inherit;
   font-weight: normal !important;
 }
-/* Endgame card inputs styling */
 .endgame-card .sideInputs {
   flex-direction: column;
   gap: 0.7rem;
@@ -380,7 +380,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   text-align: center;
   font-weight: normal !important;
 }
-/* Responsive adjustments */
 @media screen and (max-width: 900px) {
   .player-card, .player-card-inner,
   .final-result-card, .final-result-card-inner,
@@ -497,7 +496,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   color: #d4af7f !important;
   font-weight: normal !important;
 }
-/* --- DONATION BLOCKS AND BUTTONS FOR DONATION CALCULATOR --- */
 .donate-row {
   display: flex;
   align-items: center;
@@ -505,7 +503,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-bottom: 1rem;
   justify-content: center;
 }
-/* Ensure the main donation rows have the same center width for button alignment */
 .donate-blocks-container,
 .power-circle-container {
   display: flex;
@@ -544,7 +541,6 @@ input[type="number"]:focus, input[type="text"]:focus {
 .power-circle.zero {
   opacity: 0.3;
 }
-/* --- Label and helper text matching format with Normal Cards Donated--- */
 .calculatorBox label,
 .power-label {
   display: block;
@@ -556,7 +552,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   text-align: center;
   font-weight: normal !important;
 }
-/* Helper/description text italic */
 .streak-helper {
   font-style: italic;
   font-size: 1.01em;
@@ -565,12 +560,10 @@ input[type="number"]:focus, input[type="text"]:focus {
   color: #d4af7f;
   text-align: center;
 }
-/* Prevent double-tap and pinch-zoom on all buttons */
 button, .styled-btn, .card-btn, .donate-btn-shape {
   touch-action: manipulation;
   font-size: 1.1rem;
 }
-/* --- MINUS BUTTONS AND NO DONATIONS BUTTON COLOR FIX --- */
 #minusNormal, #minusPower {
   background: #947c52 !important;
   color: #fff !important;
@@ -579,7 +572,6 @@ button, .styled-btn, .card-btn, .donate-btn-shape {
   background: #947c52 !important;
   color: #fff !important;
 }
-/* --- TAGLINE --- */
 .footer-tagline {
   margin-top: 0.4rem !important;
   font-size: 1.07rem;
@@ -589,7 +581,6 @@ button, .styled-btn, .card-btn, .donate-btn-shape {
   margin-bottom: 0.4rem;
   padding-bottom: 0.18rem;
 }
-/* --- SCROLLBAR --- */
 ::-webkit-scrollbar {
   height: 9px;
   background: #232323;
