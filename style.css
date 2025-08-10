@@ -4,13 +4,8 @@ body {
   font-family: 'Roboto', Arial, sans-serif;
   margin: 0;
   padding: 0;
-  /* Prevent double-tap zoom and pinch zoom globally (except for accessibility) */
   touch-action: manipulation;
 }
-
-/* Optionally, if you want to allow pinch-zoom for accessibility, comment out the above and use only below for buttons. */
-
-/* Force Lilita One everywhere it's used to never be bold */
 .lilita, 
 [class*="lilita"], 
 [class*="Lilita"], 
@@ -29,7 +24,6 @@ body {
   font-style: normal !important;
   letter-spacing: normal;
 }
-
 .final-results-winner,
 .final-results-winner *,
 .player-card-timer,
@@ -41,13 +35,21 @@ body {
   font-weight: normal !important;
   font-style: normal !important;
 }
-
 #siteHeader {
   text-align: center;
   margin-top: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0; /* Remove bottom margin to eliminate gap */
+  padding-bottom: 0;
 }
-
+#headerTagline {
+  margin-top: -0.5rem !important;
+  margin-bottom: 0.2rem !important; /* Shrink bottom margin to tighten gap */
+  padding: 0 !important;
+  font-style: italic;
+  font-family: 'Roboto', sans-serif;
+  color: #d9d9d9;
+  /* Optionally, font-size: inherit; */
+}
 #siteLogo {
   width: 320px;
   height: 160px;
@@ -61,7 +63,6 @@ body {
   display: block;
   margin: 0 auto 0.5rem auto;
 }
-
 @media 
 (-webkit-min-device-pixel-ratio: 2),
 (min-resolution: 192dpi) {
@@ -71,7 +72,6 @@ body {
     background-size: 320px 160px;
   }
 }
-
 @keyframes flicker {
   0% { filter: brightness(1.1); }
   20% { filter: brightness(1.35); }
@@ -80,11 +80,9 @@ body {
   80% { filter: brightness(1.15); }
   100% { filter: brightness(1.3); }
 }
-
 .flicker-start {
   animation: flicker 1.5s infinite alternate;
 }
-
 .calculatorBox {
   background: #191919;
   border-radius: 14px;
@@ -99,16 +97,13 @@ body {
   gap: 1rem;
   text-align: center !important;
 }
-
 .calculatorBox * {
   text-align: center !important;
 }
-
 .calculatorBox h2 {
   color: #d4af7f;
   margin-bottom: 0.5rem;
 }
-
 input[type="text"], input[type="number"], select {
   font-size: 1.05rem;
   padding: 0.5rem;
@@ -120,11 +115,9 @@ input[type="text"], input[type="number"], select {
   width: 100%;
   box-sizing: border-box;
 }
-
 input[type="number"]:focus, input[type="text"]:focus {
   outline: 2px solid #d4af7f;
 }
-
 .styled-btn, .calculatorBox button, .popupBox button {
   font-family: 'Lilita One', cursive;
   background: #d4af7f;
@@ -138,19 +131,16 @@ input[type="number"]:focus, input[type="text"]:focus {
   transition: background 0.2s;
   font-weight: normal !important;
 }
-
 .styled-btn:active,
 .calculatorBox button:active,
 .popupBox button:active {
   background: #a68c5c;
 }
-
 .styled-btn:disabled {
   background: #777;
   color: #ccc;
   cursor: not-allowed;
 }
-
 .dimOverlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -161,7 +151,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   align-items: center;
   justify-content: center;
 }
-
 .popupBox {
   background: #232323;
   border-radius: 12px;
@@ -172,37 +161,32 @@ input[type="number"]:focus, input[type="text"]:focus {
   color: #f1f1f1;
   text-align: center;
 }
-
 .popupBox button {
   margin: 0.8rem 0.3rem 0 0.3rem;
 }
-
 #mainGameContainer {
   min-height: 150px;
 }
-
 #siteFooter {
   text-align: center;
   font-size: 0.92rem;
   color: #bbbbbb;
-  margin-top: 2.5rem;
+  margin-top: 1.2rem;
   margin-bottom: 1.2rem;
 }
-
 /* --- PLAYER CARD SECTION --- */
 .player-cards-scroll-container {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin: 1.2rem 0 2.6rem 0;
+  margin: 0.2rem 0 0 0; /* Reduce top margin to minimize gap under header */
   width: 100%;
-  padding-top: 1.1rem;
-  padding-bottom: 2.5rem;
+  padding-top: 0.1rem; /* Reduce padding above cards */
+  padding-bottom: 0;
   overflow-y: visible !important;
   position: relative;
 }
-
 .player-cards-row {
   display: flex;
   gap: 2.3rem;
@@ -215,7 +199,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   justify-content: center;
   position: relative;
 }
-
 .player-card,
 .final-result-card,
 .endgame-card {
@@ -237,7 +220,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   user-select: none;
   font-weight: normal !important;
 }
-
 .player-card.active {
   background: #191919;
   border: 3px solid #d4af7f;
@@ -245,7 +227,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   z-index: 2;
   transform: scale(1.06);
 }
-
 .player-card-inner,
 .final-result-card-inner {
   display: flex;
@@ -281,7 +262,6 @@ input[type="number"]:focus, input[type="text"]:focus {
 .player-card-breaks,
 .final-result-breaks {
   margin: 0.5rem 0;
-  /* Updated for bigger size per user request */
   font-family: 'Lilita One', cursive;
   font-size: 1.28rem;
   color: #d4af7f;
@@ -329,15 +309,13 @@ input[type="number"]:focus, input[type="text"]:focus {
 .donate-btn { }
 .charity-btn { background: #947c52; color: #fff; }
 .charity-btn:active { background: #7a6135; }
-
 /* Endgame Taxes Button - Less Wide */
 #endgameTaxesBtn {
   max-width: 180px;
   width: 100%;
-  margin: 0 auto;
+  margin: 0 auto 0.4rem auto; /* Reduce margin to close gap */
   display: block;
 }
-
 .final-results-winner {
   color: #d4af7f;
   font-size: 1.02rem;
@@ -351,7 +329,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   font-weight: normal !important;
   font-style: normal !important;
 }
-
 /* HORIZONTALLY SWIPEABLE CAROUSEL for both final results and endgame input */
 .final-results-cards-container,
 .endgame-cards-container {
@@ -373,7 +350,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   flex: 0 0 auto;
   font-weight: normal !important;
 }
-
 /* Styling for the content inside the final result cards */
 .final-result-content {
   width: 100%;
@@ -388,7 +364,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   color: inherit;
   font-weight: normal !important;
 }
-
 /* Endgame card inputs styling */
 .endgame-card .sideInputs {
   flex-direction: column;
@@ -405,7 +380,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   text-align: center;
   font-weight: normal !important;
 }
-
 /* Responsive adjustments */
 @media screen and (max-width: 900px) {
   .player-card, .player-card-inner,
@@ -423,9 +397,9 @@ input[type="number"]:focus, input[type="text"]:focus {
     max-width: 98vw;
   }
   .player-cards-scroll-container {
-    margin: 1.7rem 0 1.7rem 0;
+    margin: 1.7rem 0 0.5rem 0;
     padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
   }
   .final-results-cards-container,
   .endgame-cards-container {
@@ -434,7 +408,6 @@ input[type="number"]:focus, input[type="text"]:focus {
     margin-bottom: 0.7rem;
   }
 }
-
 .playerEndgameBlock {
   background: #232323;
   border-radius: 7px;
@@ -442,14 +415,12 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin: 0.8rem 0;
   box-shadow: 0 2px 12px #0001;
 }
-
 .sideInputs {
   display: flex;
   flex-direction: row;
   gap: 1.2rem;
   margin-top: 0.7rem;
 }
-
 .popupBox .styled-btn,
 .popupBox button {
   display: block;
@@ -457,19 +428,16 @@ input[type="number"]:focus, input[type="text"]:focus {
   margin-left: 0;
   margin-right: 0;
 }
-
 #customPopupYes,
 #customPopupNo,
 #endgameFromTurn {
   width: 100%;
 }
-
 @media screen and (max-width: 600px) {
   body {
     padding: 1rem;
     box-sizing: border-box;
   }
-
   #siteHeader, #siteFooter, .calculatorBox, .popupBox {
     width: 100%;
     max-width: 100%;
@@ -477,17 +445,14 @@ input[type="number"]:focus, input[type="text"]:focus {
     margin: 0 auto;
     box-sizing: border-box;
   }
-
   h1, h2, h3 {
     font-size: 1.4rem;
     text-align: center;
   }
-
   p, label {
     font-size: 0.9rem;
     line-height: 1.4;
   }
-
   input[type="text"],
   input[type="number"],
   select {
@@ -495,7 +460,6 @@ input[type="number"]:focus, input[type="text"]:focus {
     padding: 0.6rem;
     margin: 0.4rem 0;
   }
-
   button,
   .popupBox button,
   button.styled-btn {
@@ -504,27 +468,23 @@ input[type="number"]:focus, input[type="text"]:focus {
     margin: 0.5rem 0;
     padding: 0.75rem;
   }
-
   #siteLogo {
     width: 80vw;
     max-width: 320px;
     height: 64px;
     min-height: 40px;
   }
-
   .sideInputs {
     flex-direction: column;
     gap: 0.5rem;
   }
-
   .popupBox input {
     width: 100%;
   }
-
   .player-cards-scroll-container {
-    margin: 1.2rem 0 1.2rem 0;
+    margin: 1.2rem 0 0.5rem 0;
     padding-top: 1.3rem;
-    padding-bottom: 1.3rem;
+    padding-bottom: 0.5rem;
   }
   .final-results-cards-container,
   .endgame-cards-container {
@@ -533,12 +493,10 @@ input[type="number"]:focus, input[type="text"]:focus {
     margin-bottom: 0.4rem;
   }
 }
-
 .player-name {
   color: #d4af7f !important;
   font-weight: normal !important;
 }
-
 /* --- DONATION BLOCKS AND BUTTONS FOR DONATION CALCULATOR --- */
 .donate-row {
   display: flex;
@@ -557,7 +515,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   min-width: 170px;
   height: 36px;
 }
-
 .donate-block, .donate-block-empty {
   width: 30px;
   height: 36px;
@@ -567,7 +524,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   box-shadow: 0 1px 3px #0002;
 }
 .donate-block-empty { background: #39342b; opacity: 0.2; }
-
 .power-circle {
   width: 100%;
   height: 36px;
@@ -588,7 +544,6 @@ input[type="number"]:focus, input[type="text"]:focus {
 .power-circle.zero {
   opacity: 0.3;
 }
-
 /* --- Label and helper text matching format with Normal Cards Donated--- */
 .calculatorBox label,
 .power-label {
@@ -601,7 +556,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   text-align: center;
   font-weight: normal !important;
 }
-
 /* Helper/description text italic */
 .streak-helper {
   font-style: italic;
@@ -611,9 +565,37 @@ input[type="number"]:focus, input[type="text"]:focus {
   color: #d4af7f;
   text-align: center;
 }
-
 /* Prevent double-tap and pinch-zoom on all buttons */
 button, .styled-btn, .card-btn, .donate-btn-shape {
   touch-action: manipulation;
-  font-size: 1.1rem; /* ensure at least 16px for mobile */
+  font-size: 1.1rem;
+}
+/* --- MINUS BUTTONS AND NO DONATIONS BUTTON COLOR FIX --- */
+#minusNormal, #minusPower {
+  background: #947c52 !important;
+  color: #fff !important;
+}
+#confirmDonationBtn[style*="background:#947c52"] {
+  background: #947c52 !important;
+  color: #fff !important;
+}
+/* --- TAGLINE --- */
+.footer-tagline {
+  margin-top: 0.4rem !important;
+  font-size: 1.07rem;
+  color: #aaa;
+  text-align: center;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.18rem;
+}
+/* --- SCROLLBAR --- */
+::-webkit-scrollbar {
+  height: 9px;
+  background: #232323;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 6px;
 }

@@ -59,15 +59,17 @@ function showPlayerCards() {
       <div class="player-card${i === currentPlayerIndex ? ' active' : ''}" data-index="${i}">
         <div class="player-card-inner">
           <div class="player-card-name">${player.name}</div>
-          <div class="player-card-timer" id="playerTimer">${i === currentPlayerIndex ? timeLeft : ""}</div>
+          <div class="player-card-timer" id="playerTimer" ${i === currentPlayerIndex ? 'style="cursor:pointer;"' : ''}>
+            ${i === currentPlayerIndex ? timeLeft : ""}
+          </div>
           <div class="player-card-progress">${renderCardProgress(player.progress)}</div>
           <div class="player-card-breaks">
             <span>Tax Breaks Earned:</span>
             <span class="player-card-breaks-num">${player.streaks + player.powerCards}</span>
           </div>
           <div class="player-card-actions">
-            <button class="card-btn donate-btn" onclick="donateAction(${i})">Donate</button>
-            <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Take</button>
+            <button class="card-btn donate-btn" onclick="donateAction(${i})">Donated</button>
+            <button class="card-btn charity-btn" onclick="tookCharityAction(${i})">Received</button>
           </div>
         </div>
       </div>
@@ -83,11 +85,33 @@ function showPlayerCards() {
   `;
   scrollToActiveCard();
   setupScrollToSetActivePlayer();
+  setupTimerClickHandler();
   if (timerInterval) clearInterval(timerInterval);
   timeLeft = 60;
   timerRunningState = true;
   startTimer();
   updatePopupTimerDisplay();
+}
+
+function setupTimerClickHandler() {
+  setTimeout(() => {
+    const timerDiv = document.querySelector('.player-card.active .player-card-timer');
+    if (timerDiv) {
+      timerDiv.onclick = function() {
+        if (timeLeft === 0) {
+          timeLeft = 60;
+          timerRunningState = true;
+          updatePopupTimerDisplay();
+          startTimer();
+        } else {
+          timerRunningState = !timerRunningState;
+          if (timerRunningState) startTimer();
+          else if (timerInterval) clearInterval(timerInterval);
+        }
+        updatePopupTimerDisplay();
+      }
+    }
+  }, 0);
 }
 
 function setupScrollToSetActivePlayer() {
@@ -117,6 +141,7 @@ function setupScrollToSetActivePlayer() {
         startTimer();
         cards.forEach((c, idx) => c.classList.toggle('active', idx === minIndex));
         updatePopupTimerDisplay();
+        setupTimerClickHandler();
       }
       if (scrollTimeout) clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
@@ -203,47 +228,66 @@ function loadCalculator() {
   let normalDonated = 0;
   let powerDonated = 0;
   let tempProgress = player.progress;
-  let tempStreaks = player.streaks;
 
   function updateDisplay() {
-    // Visual progression streak (0-5 per streak)
+    let prev = tempProgress;
+    let donated = normalDonated;
+    let total = prev + donated;
+    let remainder = total % 5;
+    let blocksToShow = (remainder === 0 && total > 0) ? 5 : remainder;
+
+    let prevLeft = 0;
+    if (total > 0) {
+      let prevUsed = Math.min(prev, total - blocksToShow);
+      prevLeft = prev - prevUsed;
+      if (prevLeft < 0) prevLeft = 0;
+      if (blocksToShow < prevLeft) prevLeft = blocksToShow;
+    }
+    let gold = prevLeft;
+    let gray = Math.max(0, blocksToShow - gold);
+
     let blocks = "";
-    let donatedTotal = tempProgress + normalDonated;
-    let filled = donatedTotal % 5;
-    // Show 5 filled blocks if exactly on a new streak
-    let showFilled = (filled === 0 && donatedTotal > 0) ? 5 : filled;
     for (let i = 0; i < 5; i++) {
-      if (i < showFilled) {
-        blocks += `<div class="donate-block"></div>`;
+      if (i < gold) {
+        blocks += `<div class="donate-block" style="background:#d4af7f;"></div>`;
+      } else if (i < gold + gray) {
+        blocks += `<div class="donate-block" style="background:#d9d9d9;"></div>`;
       } else {
         blocks += `<div class="donate-block donate-block-empty"></div>`;
       }
     }
 
-    let streaksThisTurn = Math.floor(donatedTotal / 5);
+    let streaksThisTurn = Math.floor(total / 5);
     let totalStreaksThisTurn = streaksThisTurn;
     let taxBreaksPreview = player.streaks + player.powerCards + powerDonated + totalStreaksThisTurn;
+
+    let confirmButtonHtml = '';
+    if (normalDonated === 0 && powerDonated === 0) {
+      confirmButtonHtml = `<button id="confirmDonationBtn" style="background:#947c52; color:#fff;">No Donations</button>`;
+    } else {
+      confirmButtonHtml = `<button onclick="confirmTurnWithBlocks(${normalDonated},${powerDonated})" id="confirmDonationBtn">Confirm</button>`;
+    }
 
     document.getElementById("mainGameContainer").innerHTML = `
       <div class="calculatorBox" style="text-align:center;">
         <h2 class="player-name">${player.name}'s Turn</h2>
         <label>Normal Cards Donated</label>
         <div class="donate-row">
-          <button class="donate-btn-shape" id="minusNormal" ${normalDonated === 0 ? 'disabled' : ''}>-</button>
+          <button class="donate-btn-shape" id="minusNormal" style="background:#947c52; color:#fff;" ${normalDonated === 0 ? 'disabled' : ''}>-</button>
           <div class="donate-blocks-container">${blocks}</div>
           <button class="donate-btn-shape" id="plusNormal" ${(normalDonated + tempProgress >= 20) ? 'disabled' : ''}>+</button>
         </div>
         <span class="streak-helper">Each streak (5 cards) is a Tax Break Earned</span>
         <label class="power-label">Power Cards or Cash Donated</label>
         <div class="donate-row">
-          <button class="donate-btn-shape" id="minusPower" ${powerDonated === 0 ? 'disabled' : ''}>-</button>
+          <button class="donate-btn-shape" id="minusPower" style="background:#947c52; color:#fff;" ${powerDonated === 0 ? 'disabled' : ''}>-</button>
           <div class="power-circle-container">
             <div class="power-circle${powerDonated === 0 ? " zero" : ""}">${powerDonated}</div>
           </div>
           <button class="donate-btn-shape" id="plusPower" ${powerDonated >= 20 ? 'disabled' : ''}>+</button>
         </div>
         <p class="player-card-breaks" style="text-align:center;">Tax Breaks Earned: <span id="taxBreaksPreview">${taxBreaksPreview}</span></p>
-        <button onclick="confirmTurnWithBlocks(${normalDonated},${powerDonated})" id="confirmDonationBtn">Confirm</button>
+        ${confirmButtonHtml}
       </div>
     `;
 
@@ -279,14 +323,6 @@ function loadCalculator() {
 }
 
 function confirmTurnWithBlocks(normalDonated, powerDonated) {
-  if (normalDonated === 0 && powerDonated === 0) {
-    customPopup("Please enter your donations for at least one field.");
-    return;
-  }
-  if (normalDonated < 0 || powerDonated < 0) {
-    customPopup("Please enter non-negative whole numbers for both Normal Cards Donated and Power Cards or Cash Donated.");
-    return;
-  }
   const p = players[currentPlayerIndex];
   let totalProgress = p.progress + normalDonated;
   let completedStreaks = Math.floor(totalProgress / 5);
@@ -468,11 +504,9 @@ function calculateFinalTaxes() {
     <button onclick="exitToSetup()" class="styled-btn" style="max-width:180px; margin:1.1rem auto 0 auto; display:block;">EXIT</button>
   `;
 
-  // --- Scroll to final results and confetti celebration ---
   setTimeout(() => {
     const summaryEl = document.getElementById("finalSummary");
     if (summaryEl) summaryEl.scrollIntoView({ behavior: "smooth", block: "center" });
-    // Fire confetti if available!
     if (typeof confetti === "function") {
       confetti({
         particleCount: 120,
@@ -481,7 +515,6 @@ function calculateFinalTaxes() {
       });
     }
   }, 80);
-  // --------------------------------------------------------
 }
 
 function showTaxBreakdown(playerIndex) {
@@ -558,7 +591,6 @@ function showTaxBreakdown(playerIndex) {
     </div>
   `;
 
-  // Reduce gap between title and player name: remove extra <br>
   customHTMLPopup(
     `<h2 class="lilita" style="color:#d4af7f; font-weight:normal;">Tax Overview Statement</h2>`,
     breakdownHTML,
@@ -655,7 +687,6 @@ function customHTMLPopup(message, html, callback) {
   const yesBtn = document.getElementById("customPopupYes");
   const noBtn = document.getElementById("customPopupNo");
 
-  // Only one <br> between title and html to minimize gap
   msg.innerHTML = `${message}<br>${html}<br><br><button id="customCloseBtn">Close</button>`;
   msg.style.maxHeight = "75vh";
   msg.style.overflowY = "auto";
