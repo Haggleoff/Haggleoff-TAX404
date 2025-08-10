@@ -85,6 +85,7 @@ function showPlayerCards() {
   `;
   scrollToActiveCard();
   setupScrollToSetActivePlayer();
+  setupPlayerCardClickHandler(); // ADDED: enable click-to-activate
   setupTimerClickHandler();
   if (timerInterval) clearInterval(timerInterval);
   timeLeft = 60;
@@ -119,6 +120,30 @@ function setupTimerClickHandler() {
         updatePopupTimerDisplay();
       }
     }
+  }, 0);
+}
+
+function setupPlayerCardClickHandler() {
+  setTimeout(() => {
+    const row = document.getElementById("playerCardsRow");
+    if (!row) return;
+    const cards = Array.from(row.querySelectorAll('.player-card'));
+    cards.forEach((card, i) => {
+      card.onclick = function(e) {
+        // Prevent button clicks inside the card from also triggering card activation
+        if (e.target.closest('.card-btn')) return;
+        if (currentPlayerIndex === i) return; // already active
+        currentPlayerIndex = i;
+        if (timerInterval) clearInterval(timerInterval);
+        timeLeft = 60;
+        timerRunningState = true;
+        cards.forEach((c, idx) => c.classList.toggle('active', idx === i));
+        scrollToActiveCard();
+        startTimer();
+        updatePopupTimerDisplay();
+        setupTimerClickHandler();
+      };
+    });
   }, 0);
 }
 
