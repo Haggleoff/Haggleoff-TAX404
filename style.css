@@ -95,6 +95,7 @@ body {
   align-items: stretch;
   gap: 1rem;
   text-align: center !important;
+  position: relative;
 }
 .calculatorBox * {
   text-align: center !important;
@@ -600,4 +601,27 @@ button, .styled-btn, .card-btn, .donate-btn-shape {
 ::-webkit-scrollbar-thumb {
   background: #444;
   border-radius: 6px;
+}
+
+/* --- Calculator Timer Styling --- */
+#calculatorTimerWrapper {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 10;
+}
+#calculatorTimerDisplay.player-card-timer {
+  font-family: 'Lilita One', cursive !important;
+  font-size: 2.3rem;
+  color: #f1f1f1 !important;
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  min-width: 48px;
+  text-align: right;
+  letter-spacing: 1px;
+  font-weight: normal;
+  cursor: pointer;
 }

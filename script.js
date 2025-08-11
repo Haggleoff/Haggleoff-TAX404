@@ -85,7 +85,7 @@ function showPlayerCards() {
   `;
   scrollToActiveCard();
   setupScrollToSetActivePlayer();
-  setupPlayerCardClickHandler(); // ADDED: enable click-to-activate
+  setupPlayerCardClickHandler();
   setupTimerClickHandler();
   if (timerInterval) clearInterval(timerInterval);
   timeLeft = 60;
@@ -95,8 +95,6 @@ function showPlayerCards() {
 }
 
 function renderCardProgress(progress) {
-  // Always render the container for layout consistency
-  // 30px is the height of each block, adjust if you use a different value in CSS
   return `<div class="player-card-progress-bar">
     ${progress > 0 ? Array(progress).fill('<div style="width: 20px; height: 30px; background-color: #d4af7f; margin: 0 2px; border-radius: 5px;"></div>').join('') : ''}
   </div>`;
@@ -107,20 +105,33 @@ function setupTimerClickHandler() {
     const timerDiv = document.querySelector('.player-card.active .player-card-timer');
     if (timerDiv) {
       timerDiv.onclick = function() {
-        if (timeLeft === 0) {
-          timeLeft = 60;
-          timerRunningState = true;
-          updatePopupTimerDisplay();
-          startTimer();
-        } else {
-          timerRunningState = !timerRunningState;
-          if (timerRunningState) startTimer();
-          else if (timerInterval) clearInterval(timerInterval);
-        }
-        updatePopupTimerDisplay();
+        handleTimerClick();
+      }
+    }
+    // Setup calculator timer click handler if present
+    const calcTimerDiv = document.getElementById('calculatorTimerDisplay');
+    if (calcTimerDiv) {
+      calcTimerDiv.style.cursor = 'pointer'; // Show pointer cursor
+      calcTimerDiv.onclick = function() {
+        handleTimerClick();
       }
     }
   }, 0);
+}
+
+// Central timer click logic for both timers
+function handleTimerClick() {
+  if (timeLeft === 0) {
+    timeLeft = 60;
+    timerRunningState = true;
+    updatePopupTimerDisplay();
+    startTimer();
+  } else {
+    timerRunningState = !timerRunningState;
+    if (timerRunningState) startTimer();
+    else if (timerInterval) clearInterval(timerInterval);
+  }
+  updatePopupTimerDisplay();
 }
 
 function setupPlayerCardClickHandler() {
@@ -130,9 +141,8 @@ function setupPlayerCardClickHandler() {
     const cards = Array.from(row.querySelectorAll('.player-card'));
     cards.forEach((card, i) => {
       card.onclick = function(e) {
-        // Prevent button clicks inside the card from also triggering card activation
         if (e.target.closest('.card-btn')) return;
-        if (currentPlayerIndex === i) return; // already active
+        if (currentPlayerIndex === i) return;
         currentPlayerIndex = i;
         if (timerInterval) clearInterval(timerInterval);
         timeLeft = 60;
@@ -226,6 +236,7 @@ function startTimer() {
     if (timerRunningState && timeLeft > 0) {
       timeLeft--;
       updatePopupTimerDisplay();
+      updateCalculatorTimerDisplay();
       if (timeLeft <= 0) {
         timerRunningState = false;
       }
@@ -239,6 +250,15 @@ function updatePopupTimerDisplay() {
     if (i === currentPlayerIndex) div.innerText = timeLeft;
     else div.innerText = "";
   });
+  updateCalculatorTimerDisplay();
+  setupTimerClickHandler(); // Ensure the click handler is always attached to both timers
+}
+
+function updateCalculatorTimerDisplay() {
+  const calcTimer = document.getElementById('calculatorTimerDisplay');
+  if (calcTimer) {
+    calcTimer.innerText = timeLeft;
+  }
 }
 
 function donateAction(playerIndex) {
@@ -301,8 +321,16 @@ function loadCalculator() {
       confirmButtonHtml = `<button onclick="confirmTurnWithBlocks(${normalDonated},${powerDonated})" id="confirmDonationBtn">Confirm</button>`;
     }
 
+    // --- TIMER DISPLAY ADDED, now with correct color/class ---
+    let timerHtml = `
+      <div id="calculatorTimerWrapper">
+        <span id="calculatorTimerDisplay" class="player-card-timer" style="cursor:pointer;">${timeLeft}</span>
+      </div>
+    `;
+
     document.getElementById("mainGameContainer").innerHTML = `
-      <div class="calculatorBox" style="text-align:center;">
+      <div class="calculatorBox" style="text-align:center; position:relative;">
+        ${timerHtml}
         <h2 class="player-name">${player.name}'s Turn</h2>
         <label>Normal Cards Donated</label>
         <div class="donate-row">
@@ -323,6 +351,9 @@ function loadCalculator() {
         ${confirmButtonHtml}
       </div>
     `;
+
+    updateCalculatorTimerDisplay();
+    setupTimerClickHandler();
 
     document.getElementById("plusNormal").onclick = function() {
       if (normalDonated + tempProgress < 20) {
