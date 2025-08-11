@@ -198,6 +198,8 @@ input[type="number"]:focus, input[type="text"]:focus {
   scroll-behavior: smooth;
   justify-content: center;
   position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: #d4af7f #232323;
 }
 .player-card,
 .final-result-card,
@@ -624,4 +626,17 @@ button, .styled-btn, .card-btn, .donate-btn-shape {
   letter-spacing: 1px;
   font-weight: normal;
   cursor: pointer;
+}
+
+/* --- Hide scrollbars but allow scroll/swipe for carousel containers --- */
+.player-cards-row,
+.final-results-cards-container,
+.endgame-cards-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.player-cards-row::-webkit-scrollbar,
+.final-results-cards-container::-webkit-scrollbar,
+.endgame-cards-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
