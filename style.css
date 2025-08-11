@@ -41,9 +41,14 @@ body {
   margin-bottom: 0;
   padding-bottom: 0;
 }
+#taxLogoText {
+  margin-top: 0;
+  margin-bottom: 0.25rem !important; /* Adds a small gap below TAX404 */
+  padding-bottom: 0 !important;
+}
 #headerTagline {
-  margin-top: -0.5rem !important;
-  margin-bottom: 0.2rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   padding: 0 !important;
   font-style: italic;
   font-family: 'Roboto', sans-serif;
@@ -166,6 +171,8 @@ input[type="number"]:focus, input[type="text"]:focus {
 }
 #mainGameContainer {
   min-height: 150px;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 #siteFooter {
   text-align: center;
@@ -180,9 +187,10 @@ input[type="number"]:focus, input[type="text"]:focus {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
   margin: 0.2rem 0 0 0;
   width: 100%;
-  padding-top: 0.1rem;
   padding-bottom: 0;
   overflow-y: visible !important;
   position: relative;
@@ -326,10 +334,19 @@ input[type="number"]:focus, input[type="text"]:focus {
 .charity-btn { background: #947c52; color: #fff; }
 .charity-btn:active { background: #7a6135; }
 /* Endgame Taxes Button - Less Wide */
+/* 
+   The wrapping div around Endgame Taxes button in your HTML has:
+   <div style="text-align:center; margin: 2rem auto 0 auto;">
+   ...so we must override that margin with a lower specificity selector or !important.
+*/
+.player-cards-scroll-container + div[style*="text-align:center"] {
+  margin-top: 0.1rem !important;
+  margin-bottom: 0 !important;
+}
 #endgameTaxesBtn {
   max-width: 180px;
   width: 100%;
-  margin: 0 auto 0.4rem auto;
+  margin: 0 auto !important;
   display: block;
 }
 .final-results-winner {
@@ -410,9 +427,9 @@ input[type="number"]:focus, input[type="text"]:focus {
     max-width: 98vw;
   }
   .player-cards-scroll-container {
-    margin: 1.7rem 0 0.5rem 0;
-    padding-top: 1.5rem;
-    padding-bottom: 0.5rem;
+    margin: 1.2rem 0 0.3rem 0;
+    padding-top: 0.8rem;
+    padding-bottom: 0.3rem;
   }
   .final-results-cards-container,
   .endgame-cards-container {
@@ -495,9 +512,9 @@ input[type="number"]:focus, input[type="text"]:focus {
     width: 100%;
   }
   .player-cards-scroll-container {
-    margin: 1.2rem 0 0.5rem 0;
-    padding-top: 1.3rem;
-    padding-bottom: 0.5rem;
+    margin: 1.2rem 0 0.3rem 0;
+    padding-top: 0.8rem;
+    padding-bottom: 0.3rem;
   }
   .final-results-cards-container,
   .endgame-cards-container {
